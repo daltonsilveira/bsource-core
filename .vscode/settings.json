@@ -1,0 +1,51 @@
+{
+    "conventionalCommits.showEditor": false,
+    "conventionalCommits.promptCI": false,
+    "conventionalCommits.editor.keepAfterSave": false,
+    "conventionalCommits.silentAutoCommit": false,
+    "dotnet.defaultSolution": "YesLojista.sln",
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": false,
+      "**/bin": true,
+      "**/obj": true
+    },
+    "files.associations": {
+      "*.config": "xml"
+    },
+    "explorerExclude.backup": {},
+    "debug.console.fontSize": 18,
+    "debug.showSubSessionsInToolBar": true,
+    "omnisharp.loggingLevel": "debug",
+    "csharp.debug.console": "externalTerminal",
+    "omnisharp.enableEditorConfigSupport": true,
+
+    "chat.agent.enabled": true,
+    "chat.agent.maxRequests": 100,
+    "chat.agent.confirmTaskExecution": false,
+    "chat.tools.autoApprove": true,
+    "github.copilot.chat.agent.runTasks": true,
+    "github.copilot.chat.agent.confirmTaskExecution": false, 
+
+    // Configurações básicas do GitHub Copilot
+    "github.copilot.enable": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "github.copilot.advanced.indentationMode": "autoDetect",
+    "github.copilot.chat.enabled": true,
+
+    // Configurações avançadas e experimentais
+    "github.copilot.editor.enableWhenToAsk": true,
+    "github.copilot.editor.whenToAskThreshold": 0.6,
+    "github.copilot.advanced.setAutoCompletionsTimeout": 500,
+    "github.copilot.editor.enableCodeActions": true,
+    "github.copilot.inlineSuggest.enable": true,
+    "editor.inlineSuggest.showToolbar": "always",
+    "github.copilot.editor.iterativeSuggestionsEnabled": true,
+    // Configurações de timeout para projetos complexos
+    "github.copilot.chat.agent.timeoutMs": 300000,
+
+  }

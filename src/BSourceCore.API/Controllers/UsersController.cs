@@ -1,0 +1,158 @@
+using Asp.Versioning;
+using BSourceCore.API.Requests.Users;
+using BSourceCore.API.Responses;
+using BSourceCore.Application.Features.Users.Commands.CreateUser;
+using BSourceCore.Application.Features.Users.Commands.DeleteUser;
+using BSourceCore.Application.Features.Users.Commands.UpdateUser;
+using BSourceCore.Application.Features.Users.Queries.GetUserById;
+using BSourceCore.Application.Features.Users.Queries.GetUsers;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BSourceCore.API.Controllers;
+
+[ApiController]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[Produces("application/json")]
+[Authorize]
+public class UsersController : ControllerBase
+{
+    private readonly IMediator _mediator;
+    private readonly ILogger<UsersController> _logger;
+
+    public UsersController(IMediator mediator, ILogger<UsersController> logger)
+    {
+        _mediator = mediator;
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Creates a new user
+    /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = "users.create")]
+    public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
+    {
+        _logger.LogInformation("Creating user with email: {Email}", request.Email);
+
+        var command = new CreateUserCommand(
+            request.TenantId,
+            request.Name,
+            request.Email);
+
+        var result = await _mediator.Send(command);
+
+        var response = new UserResponse(
+            result.UserId,
+            request.TenantId,
+            result.Name,
+            result.Email,
+            "Active",
+            DateTimeOffset.UtcNow);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { userId = result.UserId },
+            ApiResponse<UserResponse>.Ok(response));
+    }
+
+    /// <summary>
+    /// Gets a user by ID
+    /// </summary>
+    [HttpGet("{userId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [Authorize(Policy = "users.read")]
+    public async Task<IActionResult> GetById(Guid userId)
+    {
+        _logger.LogInformation("Getting user by Id: {UserId}", userId);
+
+        var query = new GetUserByIdQuery(userId);
+        var result = await _mediator.Send(query);
+
+        if (result is null)
+        {
+            return NotFound(ApiResponse.Fail($"User with Id '{userId}' not found"));
+        }
+
+        var response = new UserResponse(
+            result.UserId,
+            result.TenantId,
+            result.Name,
+            result.Email,
+            result.Status,
+            result.CreatedAt);
+
+        return Ok(ApiResponse<UserResponse>.Ok(response));
+    }
+
+    /// <summary>
+    /// Gets all users by tenant
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<UserResponse>>), StatusCodes.Status200OK)]
+    [Authorize(Policy = "users.read")]
+    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
+    {
+        _logger.LogInformation("Getting all users for tenant: {TenantId}", tenantId);
+
+        var query = new GetUsersQuery(tenantId);
+        var result = await _mediator.Send(query);
+
+        var response = result.Select(u => new UserResponse(
+            u.UserId,
+            u.TenantId,
+            u.Name,
+            u.Email,
+            u.Status,
+            u.CreatedAt));
+
+        return Ok(ApiResponse<IEnumerable<UserResponse>>.Ok(response));
+    }
+
+    /// <summary>
+    /// Updates a user
+    /// </summary>
+    [HttpPut("{userId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [Authorize(Policy = "users.update")]
+    public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
+    {
+        _logger.LogInformation("Updating user: {UserId}", userId);
+
+        var command = new UpdateUserCommand(userId, request.Name, request.Email);
+        var result = await _mediator.Send(command);
+
+        var response = new UserResponse(
+            result.UserId,
+            Guid.Empty, // Would come from context
+            result.Name,
+            result.Email,
+            "Active",
+            DateTimeOffset.UtcNow);
+
+        return Ok(ApiResponse<UserResponse>.Ok(response));
+    }
+
+    /// <summary>
+    /// Deletes a user (soft delete)
+    /// </summary>
+    [HttpDelete("{userId:guid}")]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [Authorize(Policy = "users.delete")]
+    public async Task<IActionResult> Delete(Guid userId)
+    {
+        _logger.LogInformation("Deleting user: {UserId}", userId);
+
+        var command = new DeleteUserCommand(userId);
+        await _mediator.Send(command);
+
+        return Ok(ApiResponse.Ok());
+    }
+}
