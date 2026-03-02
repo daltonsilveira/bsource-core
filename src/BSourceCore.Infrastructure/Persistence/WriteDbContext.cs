@@ -10,12 +10,15 @@ namespace BSourceCore.Infrastructure.Persistence;
 public class WriteDbContext : DbContext
 {
     private readonly ITenantContext _tenantContext;
+    private readonly IUserContext _userContext;
 
     public WriteDbContext(
         DbContextOptions<WriteDbContext> options,
+        IUserContext userContext,
         ITenantContext tenantContext) : base(options)
     {
         _tenantContext = tenantContext;
+        _userContext = userContext;
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -25,6 +28,8 @@ public class WriteDbContext : DbContext
     public DbSet<UserGroup> UserGroups => Set<UserGroup>();
     public DbSet<GroupPermission> GroupPermissions => Set<GroupPermission>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationRecipient> NotificationRecipients => Set<NotificationRecipient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -80,9 +85,21 @@ public class WriteDbContext : DbContext
 
         foreach (var entry in entries)
         {
-            if (entry.State == EntityState.Modified)
+            if (entry.State == EntityState.Added)
+            {
+                entry.Property(e => e.CreatedAt).CurrentValue = DateTimeOffset.UtcNow;
+                if(entry.Entity.CreatedById is null && _userContext.UserId.HasValue)
+                {
+                    entry.Property(e => e.CreatedById).CurrentValue = _userContext.UserId;
+                }
+            }
+            else if (entry.State == EntityState.Modified)
             {
                 entry.Property(e => e.UpdatedAt).CurrentValue = DateTimeOffset.UtcNow;
+                if(entry.Entity.UpdatedById is null && _userContext.UserId.HasValue)
+                {
+                    entry.Property(e => e.UpdatedById).CurrentValue = _userContext.UserId;
+                }
             }
         }
     }

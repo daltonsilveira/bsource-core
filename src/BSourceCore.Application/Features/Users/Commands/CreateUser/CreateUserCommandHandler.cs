@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
 using BSourceCore.Application.Features.Users.Notifications.UserCreated;
 using BSourceCore.Domain.Entities;

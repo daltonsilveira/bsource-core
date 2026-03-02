@@ -1,21 +1,26 @@
+using System.ComponentModel.DataAnnotations;
 using BSourceCore.Domain.Enums;
 using BSourceCore.Domain.Interfaces;
 
 namespace BSourceCore.Domain.Entities;
 
-public class User : AuditEntity, ITenantEntity
+public class User : TenantAuditEntity
 {
-    public Guid UserId { get; private set; }    
+    public Guid UserId { get; private set; } = Guid.NewGuid();
+    [Required, MaxLength(200)]
     public string Login { get; private set; } = string.Empty;
+    [Required, MaxLength(200)]
     public string Name { get; private set; } = string.Empty;
+    [Required, MaxLength(200)]
     public string Email { get; private set; } = string.Empty;
+    [Required, MaxLength(500)]
     public string PasswordHash { get; private set; } = string.Empty;
+    [Required]
     public bool IsFirstAccess { get; private set; } = true;
+    [Required]
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
-    public Guid TenantId { get; set; }
 
     // Navegação
-    public Tenant Tenant { get; private set; } = null!;
     public ICollection<UserGroup> UserGroups { get; private set; } = new List<UserGroup>();
 
     private User() { }

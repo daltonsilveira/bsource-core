@@ -1,9 +1,8 @@
-using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
 using BSourceCore.Application.Features.Auth.DTOs;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Domain.Enums;
-using BSourceCore.Shared.Abstractions;
 using MediatR;
 
 namespace BSourceCore.Application.Features.Auth.Commands.Login;

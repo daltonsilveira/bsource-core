@@ -1,20 +1,23 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using BSourceCore.Domain.Enums;
-using BSourceCore.Domain.Interfaces;
 
 namespace BSourceCore.Domain.Entities;
 
-public class PasswordReset : AuditEntity, ITenantEntity
+public class PasswordReset : TenantAuditEntity
 {
-    public Guid PasswordResetId { get; private set; }
+    public Guid PasswordResetId { get; private set; } = Guid.NewGuid();
+    [ForeignKey("User")]
     public Guid UserId { get; private set; }
+    [Required, MaxLength(100)]
     public string Token { get; private set; } = string.Empty;
+    [Required]
     public DateTimeOffset ExpiresAt { get; private set; }
+    [Required]
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
-    public Guid TenantId { get; set; }
 
     // Navegação
     public User User { get; private set; } = null!;
-    public Tenant Tenant { get; private set; } = null!;
 
     private PasswordReset() { }
 

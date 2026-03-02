@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.Permissions;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.Permissions;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Permissions.Commands.CreatePermission;
 using BSourceCore.Application.Features.Permissions.Commands.UpdatePermission;
 using BSourceCore.Application.Features.Permissions.Queries.GetPermissionById;

@@ -1,4 +1,5 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BSourceCore.Infrastructure.Persistence;

@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.Groups;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.Groups;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Groups.Commands.AddPermissionToGroup;
 using BSourceCore.Application.Features.Groups.Commands.AddUserToGroup;
 using BSourceCore.Application.Features.Groups.Commands.CreateGroup;

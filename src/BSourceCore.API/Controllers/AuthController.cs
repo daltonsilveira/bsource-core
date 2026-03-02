@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.Auth;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.Auth;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Auth.Commands.Login;
 using BSourceCore.Application.Features.Auth.Commands.RefreshToken;
 using MediatR;

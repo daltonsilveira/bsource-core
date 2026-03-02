@@ -1,4 +1,5 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,7 @@ public class UserGroupRepository : Repository<UserGroup>, IUserGroupRepository
             .FirstOrDefaultAsync(ug => ug.UserId == userId && ug.GroupId == groupId, cancellationToken);
     }
 
-    public async Task<IEnumerable<UserGroup>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserGroup>> ListByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _readContext.UserGroups
             .Where(ug => ug.UserId == userId)
@@ -27,11 +28,19 @@ public class UserGroupRepository : Repository<UserGroup>, IUserGroupRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<UserGroup>> GetByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<UserGroup>> ListByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default)
     {
         return await _readContext.UserGroups
             .Where(ug => ug.GroupId == groupId)
             .Include(ug => ug.User)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IEnumerable<UserGroup>> ListByGroupIdsAsync(List<Guid> groupIds, CancellationToken cancellationToken = default)
+    {
+        return await _readContext.UserGroups
+            .Include(ug => ug.User)
+            .Where(ug => groupIds.Contains(ug.GroupId))
             .ToListAsync(cancellationToken);
     }
 }

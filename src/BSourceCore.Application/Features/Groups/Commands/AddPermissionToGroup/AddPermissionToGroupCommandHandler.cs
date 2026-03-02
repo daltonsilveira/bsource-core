@@ -1,4 +1,5 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Shared.Abstractions;
 using MediatR;

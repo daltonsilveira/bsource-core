@@ -1,18 +1,20 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using BSourceCore.Domain.Interfaces;
 
 namespace BSourceCore.Domain.Entities;
 
-public class UserGroup : AuditEntity, ITenantEntity
+public class UserGroup : TenantAuditEntity
 {
-    public Guid UserGroupId { get; private set; }
+    public Guid UserGroupId { get; private set; } = Guid.NewGuid();
+    [Required, ForeignKey("User")]
     public Guid UserId { get; private set; }
+    [Required, ForeignKey("Group")]
     public Guid GroupId { get; private set; }
-    public Guid TenantId { get; set; }
 
     // Navegação
     public User User { get; private set; } = null!;
     public Group Group { get; private set; } = null!;
-    public Tenant Tenant { get; private set; } = null!;
 
     private UserGroup() { }
 

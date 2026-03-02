@@ -33,7 +33,7 @@ public class UserCreatedNotificationHandler : INotificationHandler<UserCreatedNo
 
         var template = GetWelcomeEmailTemplate();
 
-        await _emailService.SendEmailWithData(
+        await _emailService.SendEmail(
             notification.Email,
             "Bem-vindo ao Sistema - Suas Credenciais de Acesso",
             template,

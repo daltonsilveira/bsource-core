@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.Tenants;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.Tenants;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Tenants.Commands.CreateTenant;
 using BSourceCore.Application.Features.Tenants.Queries.GetTenantById;
 using BSourceCore.Application.Features.Tenants.Queries.GetTenants;

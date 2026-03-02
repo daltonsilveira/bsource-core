@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Services;
+using BSourceCore.Application.Models.Results;
 using BSourceCore.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;

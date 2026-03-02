@@ -1,24 +1,27 @@
+using System.ComponentModel.DataAnnotations;
 using BSourceCore.Domain.Enums;
 using BSourceCore.Domain.Interfaces;
 
 namespace BSourceCore.Domain.Entities;
 
-public class Permission : AuditEntity, ITenantEntity
+public class Permission : TenantAuditEntity
 {
-    public Guid PermissionId { get; private set; }    
+    public Guid PermissionId { get; private set; } = Guid.NewGuid();    
+    [Required, MaxLength(100)]
     public string Code { get; private set; } = string.Empty;
+    [Required, MaxLength(200)]
     public string Name { get; private set; } = string.Empty;
-    public string? Description { get; private set; }
+    [MaxLength(500)]
+    public string Description { get; private set; } = string.Empty;
+    [Required]
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
-    public Guid TenantId { get; set; }
 
     // Navegação
-    public Tenant Tenant { get; private set; } = null!;
     public ICollection<GroupPermission> GroupPermissions { get; private set; } = new List<GroupPermission>();
 
     private Permission() { }
 
-    public Permission(Guid tenantId, string code, string name, string? description = null)
+    public Permission(Guid tenantId, string code, string name, string description = "")
     {
         PermissionId = Guid.NewGuid();
         TenantId = tenantId;
@@ -29,7 +32,7 @@ public class Permission : AuditEntity, ITenantEntity
         SetCreatedAudit(null);
     }
 
-    public void Update(string code, string name, string? description, Guid? userId = null)
+    public void Update(string code, string name, string description = "", Guid? userId = null)
     {
         Code = code;
         Name = name;

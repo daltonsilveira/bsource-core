@@ -1,4 +1,6 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
+using BSourceCore.Application.Abstractions.Services;
 using BSourceCore.Application.Features.Auth.DTOs;
 using BSourceCore.Shared.Abstractions;
 using MediatR;

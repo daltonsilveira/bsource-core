@@ -1,4 +1,5 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
 using BSourceCore.Infrastructure.Options;
 using BSourceCore.Infrastructure.Persistence;
@@ -9,6 +10,7 @@ using BSourceCore.Shared.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace BSourceCore.Infrastructure;
 
@@ -30,9 +32,9 @@ public static class DependencyInjection
         // HttpContextAccessor for UserContext
         services.AddHttpContextAccessor();
 
-         // Options
-        services.Configure<EmailOptions>(
-            configuration.GetSection(EmailOptions.SectionName));
+        // Options
+        services.Configure<BSourceNotifierOptions>(
+            configuration.GetSection(BSourceNotifierOptions.SectionName));
 
         // Repositories
         services.AddScoped<ITenantRepository, TenantRepository>();
@@ -48,6 +50,16 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IWebSocketNotificationService, WebSocketNotificationService>();
+
+        // HttpClients        
+        services.AddHttpClient("BSourceNotifier", (serviceProvider, client) =>
+        {
+            var settings = serviceProvider
+                .GetRequiredService<IOptions<BSourceNotifierOptions>>().Value;
+
+            client.BaseAddress = new Uri(settings.BaseUrl);
+        });
 
         return services;
     }

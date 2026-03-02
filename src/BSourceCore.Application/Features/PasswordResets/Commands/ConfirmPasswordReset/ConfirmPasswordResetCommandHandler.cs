@@ -1,4 +1,5 @@
 using BSourceCore.Application.Abstractions;
+using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
 using MediatR;
 using Microsoft.Extensions.Logging;

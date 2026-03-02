@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.Users;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.Users;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Users.Commands.CreateUser;
 using BSourceCore.Application.Features.Users.Commands.DeleteUser;
 using BSourceCore.Application.Features.Users.Commands.UpdateUser;

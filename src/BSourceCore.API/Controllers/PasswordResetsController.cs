@@ -1,6 +1,6 @@
 using Asp.Versioning;
-using BSourceCore.API.Requests.PasswordResets;
-using BSourceCore.API.Responses;
+using BSourceCore.API.Contracts.Requests.PasswordResets;
+using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.PasswordResets.Commands.ConfirmPasswordReset;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
