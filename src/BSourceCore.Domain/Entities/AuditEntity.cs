@@ -15,8 +15,8 @@ public abstract class AuditEntity
     public DateTimeOffset? UpdatedAt { get; protected set; }
 
     // Navegação
-    public virtual User CreatedBy { get; protected set; } = null!;
-    public virtual User UpdatedBy { get; protected set; } = null!;
+    public virtual User? CreatedBy { get; protected set; } = null!;
+    public virtual User? UpdatedBy { get; protected set; } = null!;
 
     protected void SetCreatedAudit(Guid? userId)
     {

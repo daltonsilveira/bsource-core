@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using BSourceCore.Domain.Enums;
 
 namespace BSourceCore.Domain.Entities;
@@ -14,11 +15,6 @@ public class Tenant : AuditEntity
     public string Description { get; private set; } = string.Empty;
     [Required]
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
-
-    // Navegação
-    public ICollection<User> Users { get; private set; } = new List<User>();
-    public ICollection<Group> Groups { get; private set; } = new List<Group>();
-    public ICollection<Permission> Permissions { get; private set; } = new List<Permission>();
 
     private Tenant() { }
 

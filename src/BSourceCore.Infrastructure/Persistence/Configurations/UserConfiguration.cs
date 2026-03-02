@@ -10,5 +10,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.HasIndex(u => new { u.TenantId, u.Email })
             .IsUnique();
+
+        builder.HasMany(x => x.UserGroups)
+         .WithOne(x => x.User)
+         .OnDelete(DeleteBehavior.Restrict);
     }
 }

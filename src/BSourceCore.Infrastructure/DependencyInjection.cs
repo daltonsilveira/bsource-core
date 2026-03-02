@@ -44,8 +44,11 @@ public static class DependencyInjection
         services.AddScoped<IUserGroupRepository, UserGroupRepository>();
         services.AddScoped<IGroupPermissionRepository, GroupPermissionRepository>();
         services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<INotificationRecipientRepository, NotificationRecipientRepository>();
 
         // Services
+        services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, TokenService>();

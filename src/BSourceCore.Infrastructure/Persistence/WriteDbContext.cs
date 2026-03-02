@@ -39,6 +39,15 @@ public class WriteDbContext : DbContext
         // Apply seed data
         SeedData.ApplySeedData(modelBuilder);
 
+        var cascadeFKs = modelBuilder.Model.GetEntityTypes()
+                .SelectMany(t => t.GetForeignKeys())
+                .Where(fk => !fk.IsOwnership && fk.DeleteBehavior.Equals(DeleteBehavior.Cascade));
+
+        foreach (var fk in cascadeFKs)
+        {
+            fk.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+
         // Apply filter to entities implementing the interface
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -88,7 +97,7 @@ public class WriteDbContext : DbContext
             if (entry.State == EntityState.Added)
             {
                 entry.Property(e => e.CreatedAt).CurrentValue = DateTimeOffset.UtcNow;
-                if(entry.Entity.CreatedById is null && _userContext.UserId.HasValue)
+                if (entry.Entity.CreatedById is null && _userContext.UserId.HasValue)
                 {
                     entry.Property(e => e.CreatedById).CurrentValue = _userContext.UserId;
                 }
@@ -96,7 +105,7 @@ public class WriteDbContext : DbContext
             else if (entry.State == EntityState.Modified)
             {
                 entry.Property(e => e.UpdatedAt).CurrentValue = DateTimeOffset.UtcNow;
-                if(entry.Entity.UpdatedById is null && _userContext.UserId.HasValue)
+                if (entry.Entity.UpdatedById is null && _userContext.UserId.HasValue)
                 {
                     entry.Property(e => e.UpdatedById).CurrentValue = _userContext.UserId;
                 }

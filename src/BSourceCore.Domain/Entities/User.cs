@@ -21,7 +21,7 @@ public class User : TenantAuditEntity
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
 
     // Navegação
-    public ICollection<UserGroup> UserGroups { get; private set; } = new List<UserGroup>();
+    public IList<UserGroup> UserGroups { get; private set; } = [];
 
     private User() { }
 
