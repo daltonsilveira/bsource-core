@@ -1,6 +1,7 @@
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
 using BSourceCore.Application.Features.Auth.DTOs;
+using BSourceCore.Application.Models.Requests;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Domain.Enums;
 using MediatR;
@@ -59,7 +60,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
         var permissions = await _userRepository.GetUserPermissionsAsync(user.UserId, cancellationToken);
 
         // Generate tokens
-        var tokenResult = await _tokenService.GenerateTokenAsync(user, permissions, cancellationToken);
+        var tokenResult = await _tokenService.GenerateTokenAsync(new TokenSubject(
+            user.UserId,
+            user.Name,
+            user.Email,
+            user.TenantId,
+            permissions.Select(p => p.Code)
+        ), cancellationToken);
 
         return new TokenDto(
             tokenResult.AccessToken,

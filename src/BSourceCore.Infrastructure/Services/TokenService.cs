@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Services;
+using BSourceCore.Application.Models.Requests;
 using BSourceCore.Application.Models.Results;
 using BSourceCore.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -20,7 +21,7 @@ public class TokenService : ITokenService
         _configuration = configuration;
     }
 
-    public Task<TokenResult> GenerateTokenAsync(User user, IEnumerable<Permission> permissions, CancellationToken cancellationToken = default)
+    public Task<TokenResult> GenerateTokenAsync(TokenSubject tokenData, CancellationToken cancellationToken = default)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? "BSourceCore-Super-Secret-Key-For-Development-Only-Must-Be-At-Least-32-Characters";
@@ -33,18 +34,18 @@ public class TokenService : ITokenService
 
         var claims = new List<Claim>
         {
-            new(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(JwtRegisteredClaimNames.Sub, tokenData.UserId.ToString()),
+            new(JwtRegisteredClaimNames.Email, tokenData.Email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new("userId", user.UserId.ToString()),
-            new("name", user.Name),
-            new("tenantId", user.TenantId.ToString())
+            new("userId", tokenData.UserId.ToString()),
+            new("name", tokenData.Name),
+            new("tenantId", tokenData.TenantId.ToString())
         };
 
         // Add permissions as claims
-        foreach (var permission in permissions)
+        foreach (var code in tokenData.PermissionCodes)
         {
-            claims.Add(new Claim("permission", permission.Code));
+            claims.Add(new Claim("permission", code));
         }
 
         var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
