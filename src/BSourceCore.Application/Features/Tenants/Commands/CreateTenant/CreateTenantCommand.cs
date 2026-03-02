@@ -7,8 +7,3 @@ public record CreateTenantCommand(
     string Slug,
     string? Description
 ) : IRequest<CreateTenantResult>;
-
-public record CreateTenantResult(
-    Guid TenantId,
-    string Name,
-    string Slug);

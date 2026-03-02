@@ -1,9 +1,6 @@
-using MediatR;
-
 namespace BSourceCore.Application.Features.Users.Commands.UpdateUser;
 
-public record UpdateUserCommand(
+public record UpdateUserResult(
     Guid UserId,
     string Name,
-    string Email
-) : IRequest<UpdateUserResult>;
+    string Email);

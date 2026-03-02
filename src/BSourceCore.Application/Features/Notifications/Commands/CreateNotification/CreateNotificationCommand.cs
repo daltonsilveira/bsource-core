@@ -10,5 +10,3 @@ public record CreateNotificationCommand(
     List<Guid> GroupIds,
     IEnumerable<CreateNotificationType> Types
 ) : IRequest<CreateNotificationResult>;
-
-public record CreateNotificationResult();

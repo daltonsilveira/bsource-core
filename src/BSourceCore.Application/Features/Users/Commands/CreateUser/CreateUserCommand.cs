@@ -7,8 +7,3 @@ public record CreateUserCommand(
     string Name,
     string Email
 ) : IRequest<CreateUserResult>;
-
-public record CreateUserResult(
-    Guid UserId,
-    string Name,
-    string Email);

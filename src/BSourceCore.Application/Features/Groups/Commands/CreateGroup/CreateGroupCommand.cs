@@ -7,7 +7,3 @@ public record CreateGroupCommand(
     string Name,
     string? Description
 ) : IRequest<CreateGroupResult>;
-
-public record CreateGroupResult(
-    Guid GroupId,
-    string Name);

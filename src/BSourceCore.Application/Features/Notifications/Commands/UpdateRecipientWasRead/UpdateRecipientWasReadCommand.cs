@@ -5,5 +5,3 @@ namespace BSourceCore.Application.Features.Notifications.Commands.UpdateRecipien
 public record UpdateRecipientWasReadCommand(
     Guid? NotificationId
 ) : IRequest<UpdateRecipientWasReadResult>;
-
-public record UpdateRecipientWasReadResult();
