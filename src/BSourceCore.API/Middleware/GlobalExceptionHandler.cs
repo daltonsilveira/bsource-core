@@ -1,6 +1,6 @@
+using BSourceCore.API.Contracts.Responses;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 
 namespace BSourceCore.API.Middleware;
 
@@ -20,44 +20,26 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "An error occurred: {Message}", exception.Message);
 
-        var (statusCode, title, detail) = exception switch
+        ApiErrorResponse errorResponse = exception switch
         {
-            ValidationException validationException => (
-                StatusCodes.Status400BadRequest,
-                "Validation Error",
-                string.Join("; ", validationException.Errors.Select(e => e.ErrorMessage))),
+            ValidationException validationException =>
+                ApiErrorResponse.Validation(
+                    validationException.Errors.Select(e => e.ErrorMessage)),
 
-            InvalidOperationException => (
-                StatusCodes.Status400BadRequest,
-                "Invalid Operation",
-                exception.Message),
+            InvalidOperationException =>
+                ApiErrorResponse.BadRequest(exception.Message),
 
-            KeyNotFoundException => (
-                StatusCodes.Status404NotFound,
-                "Not Found",
-                exception.Message),
+            KeyNotFoundException =>
+                ApiErrorResponse.NotFound(exception.Message),
 
-            UnauthorizedAccessException => (
-                StatusCodes.Status401Unauthorized,
-                "Unauthorized",
-                exception.Message),
+            UnauthorizedAccessException =>
+                ApiErrorResponse.Unauthorized(exception.Message),
 
-            _ => (
-                StatusCodes.Status500InternalServerError,
-                "Internal Server Error",
-                "An unexpected error occurred. Please try again later.")
+            _ => ApiErrorResponse.InternalError()
         };
 
-        var problemDetails = new ProblemDetails
-        {
-            Status = statusCode,
-            Title = title,
-            Detail = detail,
-            Instance = httpContext.Request.Path
-        };
-
-        httpContext.Response.StatusCode = statusCode;
-        await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+        httpContext.Response.StatusCode = errorResponse.Status;
+        await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
 
         return true;
     }

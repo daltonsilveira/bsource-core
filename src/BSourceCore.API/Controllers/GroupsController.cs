@@ -37,7 +37,7 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.create")]
     public async Task<IActionResult> Create([FromBody] CreateGroupRequest request)
     {
@@ -61,7 +61,7 @@ public class GroupsController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { groupId = result.GroupId },
-            ApiResponse<GroupResponse>.Ok(response));
+            ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
@@ -69,7 +69,7 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpGet("{groupId:guid}")]
     [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetById(Guid groupId)
     {
@@ -80,7 +80,7 @@ public class GroupsController : ControllerBase
 
         if (result is null)
         {
-            return NotFound(ApiResponse.Fail($"Group with Id '{groupId}' not found"));
+            return NotFound(ApiErrorResponse.NotFound($"Group with Id '{groupId}' not found"));
         }
 
         var response = new GroupResponse(
@@ -91,14 +91,14 @@ public class GroupsController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(ApiResponse<GroupResponse>.Ok(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all groups by tenant
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<GroupResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
     {
@@ -115,7 +115,7 @@ public class GroupsController : ControllerBase
             g.Status,
             g.CreatedAt));
 
-        return Ok(ApiResponse<IEnumerable<GroupResponse>>.Ok(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
@@ -123,7 +123,7 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpPut("{groupId:guid}")]
     [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> Update(Guid groupId, [FromBody] UpdateGroupRequest request)
     {
@@ -140,15 +140,15 @@ public class GroupsController : ControllerBase
             "Active",
             DateTimeOffset.UtcNow);
 
-        return Ok(ApiResponse<GroupResponse>.Ok(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
     /// Deletes a group (soft delete)
     /// </summary>
     [HttpDelete("{groupId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.delete")]
     public async Task<IActionResult> Delete(Guid groupId)
     {
@@ -157,15 +157,15 @@ public class GroupsController : ControllerBase
         var command = new DeleteGroupCommand(groupId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 
     /// <summary>
     /// Adds a user to a group
     /// </summary>
     [HttpPost("{groupId:guid}/users")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddUser(Guid groupId, [FromBody] AddUserToGroupRequest request)
     {
@@ -174,15 +174,15 @@ public class GroupsController : ControllerBase
         var command = new AddUserToGroupCommand(groupId, request.UserId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 
     /// <summary>
     /// Removes a user from a group
     /// </summary>
     [HttpDelete("{groupId:guid}/users/{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemoveUser(Guid groupId, Guid userId)
     {
@@ -191,15 +191,15 @@ public class GroupsController : ControllerBase
         var command = new RemoveUserFromGroupCommand(groupId, userId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 
     /// <summary>
     /// Adds a permission to a group
     /// </summary>
     [HttpPost("{groupId:guid}/permissions")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddPermission(Guid groupId, [FromBody] AddPermissionToGroupRequest request)
     {
@@ -208,15 +208,15 @@ public class GroupsController : ControllerBase
         var command = new AddPermissionToGroupCommand(groupId, request.PermissionId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 
     /// <summary>
     /// Removes a permission from a group
     /// </summary>
     [HttpDelete("{groupId:guid}/permissions/{permissionId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemovePermission(Guid groupId, Guid permissionId)
     {
@@ -225,6 +225,6 @@ public class GroupsController : ControllerBase
         var command = new RemovePermissionFromGroupCommand(groupId, permissionId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 }

@@ -1,48 +1,70 @@
+using Microsoft.AspNetCore.Http;
+
 namespace BSourceCore.API.Contracts.Responses;
 
 public record ApiResponse<T>
 {
-    public bool Success { get; init; }
-    public T? Data { get; init; }
-    public string? Error { get; init; }
-    public IEnumerable<string>? Errors { get; init; }
+    public IEnumerable<T> Results { get; init; } = [];
+    public int Total { get; init; }
 
-    public static ApiResponse<T> Ok(T data) => new()
-    {
-        Success = true,
-        Data = data
-    };
+    public static ApiResponse<T> From(T item) =>
+        new() { Results = [item], Total = 1 };
 
-    public static ApiResponse<T> Fail(string error) => new()
+    public static ApiResponse<T> From(IEnumerable<T> items)
     {
-        Success = false,
-        Error = error
-    };
+        if (items is ICollection<T> collection)
+            return new() { Results = collection, Total = collection.Count };
 
-    public static ApiResponse<T> Fail(IEnumerable<string> errors) => new()
-    {
-        Success = false,
-        Errors = errors
-    };
+        var list = items.ToList();
+        return new() { Results = list, Total = list.Count };
+    }
 }
 
-public record ApiResponse
+public record ApiErrorResponse
 {
-    public bool Success { get; init; }
-    public string? Error { get; init; }
+    public string Type { get; init; } = string.Empty;
+    public string Title { get; init; } = string.Empty;
+    public int Status { get; init; }
+    public string? Detail { get; init; }
     public IEnumerable<string>? Errors { get; init; }
 
-    public static ApiResponse Ok() => new() { Success = true };
-
-    public static ApiResponse Fail(string error) => new()
+    public static ApiErrorResponse NotFound(string detail) => new()
     {
-        Success = false,
-        Error = error
+        Type = "not_found",
+        Title = "Not Found",
+        Status = StatusCodes.Status404NotFound,
+        Detail = detail
     };
 
-    public static ApiResponse Fail(IEnumerable<string> errors) => new()
+    public static ApiErrorResponse Validation(IEnumerable<string> errors) => new()
     {
-        Success = false,
+        Type = "validation_error",
+        Title = "Validation Error",
+        Status = StatusCodes.Status400BadRequest,
         Errors = errors
+    };
+
+    public static ApiErrorResponse BadRequest(string detail) => new()
+    {
+        Type = "bad_request",
+        Title = "Bad Request",
+        Status = StatusCodes.Status400BadRequest,
+        Detail = detail
+    };
+
+    public static ApiErrorResponse Unauthorized(string detail) => new()
+    {
+        Type = "unauthorized",
+        Title = "Unauthorized",
+        Status = StatusCodes.Status401Unauthorized,
+        Detail = detail
+    };
+
+    public static ApiErrorResponse InternalError() => new()
+    {
+        Type = "internal_error",
+        Title = "Internal Server Error",
+        Status = StatusCodes.Status500InternalServerError,
+        Detail = "An unexpected error occurred. Please try again later."
     };
 }

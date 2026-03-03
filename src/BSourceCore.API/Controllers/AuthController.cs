@@ -30,8 +30,8 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         _logger.LogInformation("Login attempt for email: {Email}", request.Email);
@@ -55,12 +55,12 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("Login successful for user: {UserId}", result.UserId);
 
-            return Ok(ApiResponse<TokenResponse>.Ok(response));
+            return Ok(ApiResponse<TokenResponse>.From(response));
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning("Login failed for email: {Email} - {Message}", request.Email, ex.Message);
-            return Unauthorized(ApiResponse.Fail(ex.Message));
+            return Unauthorized(ApiErrorResponse.Unauthorized(ex.Message));
         }
     }
 
@@ -70,7 +70,7 @@ public class AuthController : ControllerBase
     [HttpPost("refresh")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
         _logger.LogInformation("Token refresh attempt");
@@ -90,12 +90,12 @@ public class AuthController : ControllerBase
                 result.Name,
                 result.Permissions);
 
-            return Ok(ApiResponse<TokenResponse>.Ok(response));
+            return Ok(ApiResponse<TokenResponse>.From(response));
         }
         catch (UnauthorizedAccessException ex)
         {
             _logger.LogWarning("Token refresh failed: {Message}", ex.Message);
-            return Unauthorized(ApiResponse.Fail(ex.Message));
+            return Unauthorized(ApiErrorResponse.Unauthorized(ex.Message));
         }
     }
 
@@ -121,6 +121,6 @@ public class AuthController : ControllerBase
             TenantId = tenantId
         };
 
-        return Ok(ApiResponse<object>.Ok(response));
+        return Ok(ApiResponse<object>.From(response));
     }
 }
