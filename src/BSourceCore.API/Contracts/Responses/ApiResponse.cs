@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace BSourceCore.API.Contracts.Responses;
 
-public record ApiResponse<T>
+public record PagedResponse<T>
 {
     public IEnumerable<T> Results { get; init; } = [];
     public int Total { get; init; }
