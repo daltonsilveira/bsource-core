@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using BSourceCore.API.Contracts.Requests.Groups;
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Groups.Commands.AddPermissionToGroup;
 using BSourceCore.Application.Features.Groups.Commands.AddUserToGroup;
 using BSourceCore.Application.Features.Groups.Commands.CreateGroup;
@@ -50,18 +51,12 @@ public class GroupsController : ControllerBase
 
         var result = await _mediator.Send(command);
 
-        var response = new GroupResponse(
-            result.GroupId,
-            request.TenantId,
-            result.Name,
-            request.Description,
-            "Active",
-            DateTimeOffset.UtcNow);
-
-        return CreatedAtAction(
+        return result.ToCreatedResult(
+            this,
             nameof(GetById),
-            new { groupId = result.GroupId },
-            ApiResponse<GroupResponse>.From(response));
+            r => new { groupId = r.GroupId },
+            r => ApiResponse<GroupResponse>.From(new GroupResponse(
+                r.GroupId, request.TenantId, r.Name, request.Description, "Active", DateTimeOffset.UtcNow)));
     }
 
     /// <summary>
@@ -107,15 +102,8 @@ public class GroupsController : ControllerBase
         var query = new GetGroupsQuery(tenantId);
         var result = await _mediator.Send(query);
 
-        var response = result.Select(g => new GroupResponse(
-            g.GroupId,
-            g.TenantId,
-            g.Name,
-            g.Description,
-            g.Status,
-            g.CreatedAt));
-
-        return Ok(ApiResponse<GroupResponse>.From(response));
+        return result.ToCollectionResult(g => new GroupResponse(
+            g.GroupId, g.TenantId, g.Name, g.Description, g.Status, g.CreatedAt));
     }
 
     /// <summary>

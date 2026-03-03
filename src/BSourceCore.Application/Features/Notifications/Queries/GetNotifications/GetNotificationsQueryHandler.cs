@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Notifications.Queries.GetNotifications;
 
-public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, IEnumerable<NotificationDto>>
+public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, Result<CollectionResult<NotificationDto>>>
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly IUserContext _userContext;
@@ -23,7 +24,7 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
         _logger = logger;
     }
 
-    public async Task<IEnumerable<NotificationDto>> Handle(
+    public async Task<Result<CollectionResult<NotificationDto>>> Handle(
         GetNotificationsQuery request,
         CancellationToken cancellationToken)
     {
@@ -31,13 +32,16 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
 
         var notifications = await _notificationRepository.ListByUserAsync(_userContext.UserId!.Value, cancellationToken);
 
-        return notifications.Select(n => new NotificationDto(
+        var items = notifications.Select(n => new NotificationDto(
             n.NotificationId,
             n.Title,
             n.Message,
             n.Data,
             n.Recipients.Any(r => r.UserId == _userContext.UserId && r.WasRead),
             n.CreatedAt,
-            n.Recipients.Where(r => r.UserId == _userContext.UserId).Select(r => r.NotificationRecipientId).FirstOrDefault()));
+            n.Recipients.Where(r => r.UserId == _userContext.UserId).Select(r => r.NotificationRecipientId).FirstOrDefault())
+            ).ToList();
+
+        return Result<CollectionResult<NotificationDto>>.Success(CollectionResult<NotificationDto>.From(items));
     }
 }

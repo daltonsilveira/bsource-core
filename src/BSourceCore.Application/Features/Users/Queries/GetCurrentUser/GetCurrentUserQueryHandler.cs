@@ -1,12 +1,13 @@
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Users.Queries.GetCurrentUser;
 
-public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, CurrentUserDto?>
+public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, Result<CurrentUserDto>>
 {
     private readonly IUserRepository _userRepository;
     private readonly INotificationRepository _notificationRepository;
@@ -25,7 +26,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, C
         _logger = logger;
     }
 
-    public async Task<CurrentUserDto?> Handle(
+    public async Task<Result<CurrentUserDto>> Handle(
         GetCurrentUserQuery request,
         CancellationToken cancellationToken)
     {
@@ -34,7 +35,10 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, C
         if (userId is null)
         {
             _logger.LogWarning("Attempted to get current user without authenticated context");
-            return null;
+            return Result<CurrentUserDto>.Fail(new Error(
+                "User.Unauthorized",
+                "User is not authenticated",
+                ErrorType.Unauthorized));
         }
 
         _logger.LogInformation("Getting current user data for: {UserId}", userId);
@@ -43,8 +47,11 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, C
 
         if (user is null)
         {
-            _logger.LogWarning("Authenticated user not found in database: {UserId}", userId);
-            return null;
+            _logger.LogWarning("User not found with Id: {UserId}", userId);
+            return Result<CurrentUserDto>.Fail(new Error(
+                "User.NotFound",
+                $"User with Id '{userId}' not found",
+                ErrorType.NotFound));
         }
 
         var permissions = await _userRepository.GetUserPermissionsAsync(userId.Value, cancellationToken);
@@ -60,12 +67,12 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, C
             n.CreatedAt,
             n.Recipients.Where(r => r.UserId == userId).Select(r => r.NotificationRecipientId).FirstOrDefault()));
 
-        return new CurrentUserDto(
+        return Result<CurrentUserDto>.Success(new CurrentUserDto(
             user.UserId,
             user.TenantId,
             user.Name,
             user.Email,
             permissions.Select(p => p.Code),
-            notificationDtos);
+            notificationDtos));
     }
 }

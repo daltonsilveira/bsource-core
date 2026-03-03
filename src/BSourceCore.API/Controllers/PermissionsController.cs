@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using BSourceCore.API.Contracts.Requests.Permissions;
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Permissions.Commands.CreatePermission;
 using BSourceCore.Application.Features.Permissions.Commands.UpdatePermission;
 using BSourceCore.Application.Features.Permissions.Queries.GetPermissionById;
@@ -102,15 +103,8 @@ public class PermissionsController : ControllerBase
         var query = new GetPermissionsQuery();
         var result = await _mediator.Send(query);
 
-        var response = result.Select(p => new PermissionResponse(
-            p.PermissionId,
-            p.Code,
-            p.Name,
-            p.Description,
-            p.Status,
-            p.CreatedAt));
-
-        return Ok(ApiResponse<PermissionResponse>.From(response));
+        return result.ToCollectionResult(p => new PermissionResponse(
+            p.PermissionId, p.Code, p.Name, p.Description, p.Status, p.CreatedAt));
     }
 
     /// <summary>

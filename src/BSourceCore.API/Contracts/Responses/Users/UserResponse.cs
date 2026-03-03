@@ -1,14 +1,15 @@
 using BSourceCore.Domain.Enums;
 
-namespace BSourceCore.Application.Features.Users.DTOs;
+namespace BSourceCore.API.Contracts.Responses;
 
-public record UserDto(
+public record UserResponse(
     Guid UserId,
-    Guid TenantId,
     string Name,
     string Email,
     BaseStatus Status,
     DateTimeOffset CreatedAt,
-    UserAuditDto? CreatedBy,
+    UserAuditResponse? CreatedBy,
     DateTimeOffset? UpdatedAt,
-    UserAuditDto? UpdatedBy);
+    UserAuditResponse? UpdatedBy);
+
+

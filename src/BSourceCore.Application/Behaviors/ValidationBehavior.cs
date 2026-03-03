@@ -1,3 +1,5 @@
+using System.Reflection;
+using BSourceCore.Shared.Kernel.Results;
 using FluentValidation;
 using MediatR;
 
@@ -35,9 +37,59 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
 
         if (failures.Count != 0)
         {
+            var details = failures
+                .GroupBy(f => f.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(f => f.ErrorMessage).ToArray());
+
+            var error = new Error(
+                "Validation",
+                "One or more validation errors occurred.",
+                ErrorType.Validation,
+                details);
+
+            if (TryCreateFailResult(error, out var failResult))
+            {
+                return failResult!;
+            }
+
             throw new ValidationException(failures);
         }
 
         return await next();
+    }
+
+    private static bool TryCreateFailResult(Error error, out TResponse? result)
+    {
+        result = default;
+        var responseType = typeof(TResponse);
+
+        if (!responseType.IsAssignableTo(typeof(Result)))
+            return false;
+
+        if (responseType == typeof(Result))
+        {
+            result = (TResponse)(object)Result.Fail(error);
+            return true;
+        }
+
+        if (responseType.IsGenericType && responseType.GetGenericTypeDefinition() == typeof(Result<>))
+        {
+            var failMethod = responseType.GetMethod(
+                "Fail",
+                BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
+                null,
+                [typeof(Error)],
+                null);
+
+            if (failMethod is not null)
+            {
+                result = (TResponse)failMethod.Invoke(null, [error])!;
+                return true;
+            }
+        }
+
+        return false;
     }
 }

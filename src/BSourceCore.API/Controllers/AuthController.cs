@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using BSourceCore.API.Contracts.Requests.Auth;
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Auth.Commands.Login;
 using BSourceCore.Application.Features.Auth.Commands.RefreshToken;
 using MediatR;
@@ -29,38 +30,30 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(CollectionResponse<TokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         _logger.LogInformation("Login attempt for email: {Email}", request.Email);
 
         var command = new LoginCommand(request.Email, request.Password, request.TenantId);
+        var result = await _mediator.Send(command);
 
-        try
+        if (!result.IsSuccess)
         {
-            var result = await _mediator.Send(command);
-
-            var response = new TokenResponse(
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt,
-                result.UserId,
-                result.Email,
-                result.Name,
-                result.RequiresPasswordReset,
-                result.PasswordResetToken);
-
-            _logger.LogInformation("Login successful for user: {UserId}", result.UserId);
-
-            return Ok(ApiResponse<TokenResponse>.From(response));
+            return result.ToProblemDetails(this);
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogWarning("Login failed for email: {Email} - {Message}", request.Email, ex.Message);
-            return Unauthorized(ApiErrorResponse.Unauthorized(ex.Message));
-        }
+
+        return Ok(CollectionResponse<TokenResponse>.From(new TokenResponse(
+                result.Value!.AccessToken,
+                result.Value!.RefreshToken,
+                result.Value!.ExpiresAt,
+                result.Value!.UserId,
+                result.Value!.Email,
+                result.Value!.Name,
+                result.Value!.RequiresPasswordReset,
+                result.Value!.PasswordResetToken)));
     }
 
     /// <summary>
@@ -68,32 +61,29 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("refresh")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(CollectionResponse<TokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
         _logger.LogInformation("Token refresh attempt");
 
         var command = new RefreshTokenCommand(request.RefreshToken);
 
-        try
-        {
-            var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            var response = new TokenResponse(
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt,
-                result.UserId,
-                result.Email,
-                result.Name);
-
-            return Ok(ApiResponse<TokenResponse>.From(response));
-        }
-        catch (UnauthorizedAccessException ex)
+        if (!result.IsSuccess)
         {
-            _logger.LogWarning("Token refresh failed: {Message}", ex.Message);
-            return Unauthorized(ApiErrorResponse.Unauthorized(ex.Message));
+            return result.ToProblemDetails(this);
         }
+
+        var response = new TokenResponse(
+            result.Value!.AccessToken,
+            result.Value!.RefreshToken,
+            result.Value!.ExpiresAt,
+            result.Value!.UserId,
+            result.Value!.Email,
+            result.Value!.Name);
+
+        return Ok(CollectionResponse<TokenResponse>.From(response));
     }
 }

@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Users.Queries.GetUserById;
 
-public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto?>
+public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result<UserDto>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserContext _userContext;
@@ -23,7 +24,7 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
         _logger = logger;
     }
 
-    public async Task<UserDto?> Handle(
+    public async Task<Result<UserDto>> Handle(
         GetUserByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -34,15 +35,27 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
         if (user is null)
         {
             _logger.LogWarning("User not found with Id: {UserId}", request.UserId);
-            return null;
+            return Result<UserDto>.Fail(new Error(
+                "User.NotFound",
+                $"User with Id '{request.UserId}' not found",
+                ErrorType.NotFound));
         }
 
-        return new UserDto(
+        return Result<UserDto>.Success(new UserDto(
             user.UserId,
             user.TenantId,
             user.Name,
             user.Email,
-            user.Status.ToString(),
-            user.CreatedAt);
+            user.Status,
+            user.CreatedAt,
+            user.CreatedBy != null ? new UserAuditDto(
+                user.CreatedBy.UserId,
+                user.CreatedBy.Name,
+                user.CreatedBy.Email) : null,
+            user.UpdatedAt,
+            user.UpdatedBy != null ? new UserAuditDto(
+                user.UpdatedBy.UserId,
+                user.UpdatedBy.Name,
+                user.UpdatedBy.Email) : null));
     }
 }

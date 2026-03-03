@@ -1,12 +1,13 @@
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.Commands.DeleteRecipient;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Notifications.Commands.UpdateRecipientWasRead;
 
-public class DeleteRecipientCommandHandler : IRequestHandler<DeleteRecipientCommand, DeleteRecipientResult>
+public class DeleteRecipientCommandHandler : IRequestHandler<DeleteRecipientCommand, Result>
 {
     private readonly INotificationRecipientRepository _notificationRecipientRepository;
     private readonly INotificationRepository _notificationRepository;
@@ -28,14 +29,22 @@ public class DeleteRecipientCommandHandler : IRequestHandler<DeleteRecipientComm
         _logger = logger;
     }
 
-    public async Task<DeleteRecipientResult> Handle(
+    public async Task<Result> Handle(
         DeleteRecipientCommand request,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Deleting notification recipient: {UserId}", _userContext.UserId);
 
-        var recipient = await _notificationRecipientRepository.GetByIdAsync(request.NotificationRecipientId, cancellationToken)
-            ?? throw new KeyNotFoundException($"Notification recipient with Id '{request.NotificationRecipientId}' not found");
+        var recipient = await _notificationRecipientRepository.GetByIdAsync(request.NotificationRecipientId, cancellationToken);
+
+        if (recipient == null)
+        {
+            _logger.LogWarning("Notification recipient not found with Id: {NotificationRecipientId}", request.NotificationRecipientId);
+            return Result.Fail(new Error(
+                "NotificationRecipient.NotFound",
+                $"Notification recipient with Id '{request.NotificationRecipientId}' not found",
+                ErrorType.NotFound));
+        };
 
         var notificationId = recipient.NotificationId;
 
@@ -57,6 +66,6 @@ public class DeleteRecipientCommandHandler : IRequestHandler<DeleteRecipientComm
 
         _logger.LogInformation("Notification recipient deleted: {UserId}", _userContext.UserId);
 
-        return new DeleteRecipientResult();
+        return Result.Success();
     }
 }

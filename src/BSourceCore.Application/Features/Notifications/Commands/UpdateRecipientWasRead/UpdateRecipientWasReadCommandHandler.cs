@@ -1,12 +1,13 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Notifications.Commands.UpdateRecipientWasRead;
 
-public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipientWasReadCommand, UpdateRecipientWasReadResult>
+public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipientWasReadCommand, Result>
 {
     private readonly INotificationRecipientRepository _notificationRecipientRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -25,7 +26,7 @@ public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipi
         _logger = logger;
     }
 
-    public async Task<UpdateRecipientWasReadResult> Handle(
+    public async Task<Result> Handle(
         UpdateRecipientWasReadCommand request,
         CancellationToken cancellationToken)
     {
@@ -36,7 +37,10 @@ public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipi
             var recipient = await _notificationRecipientRepository.GetByNotificationAndUserAsync(request.NotificationId.Value, _userContext.UserId.Value, cancellationToken);
             if (recipient is null)
             {
-                throw new KeyNotFoundException($"Notification recipient with Notification Id '{request.NotificationId}' and User Id '{_userContext.UserId}' not found");
+                return Result.Fail(new Error(
+                    "NotificationRecipient.NotFound",
+                    $"Notification recipient with Notification Id '{request.NotificationId}' and User Id '{_userContext.UserId}' not found",
+                    ErrorType.NotFound));                    
             }
 
             recipient.MarkAsRead(_userContext.UserId);
@@ -56,6 +60,6 @@ public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipi
 
         _logger.LogInformation("Notification recipient was read updated: {UserId}", _userContext.UserId);
 
-        return new UpdateRecipientWasReadResult();
+        return Result.Success();
     }
 }

@@ -4,11 +4,12 @@ using BSourceCore.Application.Features.Auth.DTOs;
 using BSourceCore.Application.Models.Requests;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Domain.Enums;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 
 namespace BSourceCore.Application.Features.Auth.Commands.Login;
 
-public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
+public class LoginCommandHandler : IRequestHandler<LoginCommand, Result<TokenDto>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordResetRepository _passwordResetRepository;
@@ -30,33 +31,33 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<TokenDto> Handle(LoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenDto>> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByLoginAsync(request.Login, cancellationToken);
 
         if (user is null)
         {
-            throw new UnauthorizedAccessException("Invalid login or password");
+            return Result<TokenDto>.Fail(new Error(
+                "Auth.InvalidCredentials", "Invalid login or password", ErrorType.Unauthorized));
         }
 
-        // Allow login for Active or Pending (first access) users
         if (user.Status != BaseStatus.Active && user.Status != BaseStatus.Pending)
         {
-            throw new UnauthorizedAccessException("User account is not active");
+            return Result<TokenDto>.Fail(new Error(
+                "Auth.InactiveAccount", "User account is not active", ErrorType.Unauthorized));
         }
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedAccessException("Invalid login or password");
+            return Result<TokenDto>.Fail(new Error(
+                "Auth.InvalidCredentials", "Invalid login or password", ErrorType.Unauthorized));
         }
 
-        // Check if user needs to reset password on first access
         if (user.IsFirstAccess)
         {
             return await HandleFirstAccessAsync(user, cancellationToken);
         }
 
-        // Generate tokens
         var tokenResult = await _tokenService.GenerateTokenAsync(new TokenSubject(
             user.UserId,
             user.Name,
@@ -64,18 +65,17 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             user.TenantId
         ), cancellationToken);
 
-        return new TokenDto(
+        return Result<TokenDto>.Success(new TokenDto(
             tokenResult.AccessToken,
             tokenResult.RefreshToken,
             tokenResult.ExpiresAt,
             user.UserId,
             user.Email,
-            user.Name);
+            user.Name));
     }
 
-    private async Task<TokenDto> HandleFirstAccessAsync(User user, CancellationToken cancellationToken)
+    private async Task<Result<TokenDto>> HandleFirstAccessAsync(User user, CancellationToken cancellationToken)
     {
-        // Invalidate any existing active password resets for this user
         var activeResets = await _passwordResetRepository.GetActiveByUserIdAsync(user.UserId, cancellationToken);
         foreach (var reset in activeResets)
         {
@@ -83,12 +83,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             _passwordResetRepository.Update(reset);
         }
 
-        // Create new password reset
         var passwordReset = new PasswordReset(user.UserId);
         await _passwordResetRepository.AddAsync(passwordReset, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new TokenDto(
+        return Result<TokenDto>.Success(new TokenDto(
             AccessToken: string.Empty,
             RefreshToken: string.Empty,
             ExpiresAt: passwordReset.ExpiresAt,
@@ -96,6 +95,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             Email: user.Email,
             Name: user.Name,
             RequiresPasswordReset: true,
-            PasswordResetToken: passwordReset.Token);
+            PasswordResetToken: passwordReset.Token));
     }
 }

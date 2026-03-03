@@ -1,12 +1,14 @@
 using Asp.Versioning;
 using BSourceCore.API.Contracts.Requests.Users;
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Users.Commands.CreateUser;
 using BSourceCore.Application.Features.Users.Commands.DeleteUser;
 using BSourceCore.Application.Features.Users.Commands.UpdateUser;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Application.Features.Users.Queries.GetCurrentUser;
 using BSourceCore.Application.Features.Users.Queries.GetUserById;
-using BSourceCore.Application.Features.Users.Queries.GetUsers;
+using BSourceCore.Application.Features.Users.Queries.ListUsers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,8 +35,8 @@ public class UsersController : ControllerBase
     /// Creates a new user
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "users.create")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
@@ -47,80 +49,64 @@ public class UsersController : ControllerBase
 
         var result = await _mediator.Send(command);
 
-        var response = new UserResponse(
-            result.UserId,
-            request.TenantId,
-            result.Name,
-            result.Email,
-            "Active",
-            DateTimeOffset.UtcNow);
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
 
-        return CreatedAtAction(
-            nameof(GetById),
-            new { userId = result.UserId },
-            ApiResponse<UserResponse>.From(response));
+        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
     /// Gets a user by ID
     /// </summary>
     [HttpGet("{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetById(Guid userId)
     {
         _logger.LogInformation("Getting user by Id: {UserId}", userId);
 
         var query = new GetUserByIdQuery(userId);
+
         var result = await _mediator.Send(query);
 
-        if (result is null)
+        if (!result.IsSuccess)
         {
-            return NotFound(ApiErrorResponse.NotFound($"User with Id '{userId}' not found"));
+            return result.ToProblemDetails(this);
         }
 
-        var response = new UserResponse(
-            result.UserId,
-            result.TenantId,
-            result.Name,
-            result.Email,
-            result.Status,
-            result.CreatedAt);
-
-        return Ok(ApiResponse<UserResponse>.From(response));
+        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
-    /// Gets all users by tenant
+    /// List users
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "users.read")]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
+    public async Task<IActionResult> List()
     {
-        _logger.LogInformation("Getting all users for tenant: {TenantId}", tenantId);
+        _logger.LogInformation("Listing all users");
 
-        var query = new GetUsersQuery(tenantId);
+        var query = new ListUsersQuery();
         var result = await _mediator.Send(query);
 
-        var response = result.Select(u => new UserResponse(
-            u.UserId,
-            u.TenantId,
-            u.Name,
-            u.Email,
-            u.Status,
-            u.CreatedAt));
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
 
-        return Ok(ApiResponse<UserResponse>.From(response));
+        return Ok(CollectionResponse<UserResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x))));
     }
 
     /// <summary>
     /// Updates a user
     /// </summary>
     [HttpPut("{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.update")]
     public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
     {
@@ -129,15 +115,12 @@ public class UsersController : ControllerBase
         var command = new UpdateUserCommand(userId, request.Name, request.Email);
         var result = await _mediator.Send(command);
 
-        var response = new UserResponse(
-            result.UserId,
-            Guid.Empty, // Would come from context
-            result.Name,
-            result.Email,
-            "Active",
-            DateTimeOffset.UtcNow);
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
 
-        return Ok(ApiResponse<UserResponse>.From(response));
+        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
@@ -145,14 +128,19 @@ public class UsersController : ControllerBase
     /// </summary>
     [HttpDelete("{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.delete")]
     public async Task<IActionResult> Delete(Guid userId)
     {
         _logger.LogInformation("Deleting user: {UserId}", userId);
 
         var command = new DeleteUserCommand(userId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
 
         return NoContent();
     }
@@ -162,7 +150,7 @@ public class UsersController : ControllerBase
     /// </summary>
     [HttpGet("me")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<CurrentUserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<CurrentUserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCurrentUser()
     {
@@ -170,25 +158,45 @@ public class UsersController : ControllerBase
 
         var result = await _mediator.Send(new GetCurrentUserQuery());
 
-        if (result is null)
+        if (!result.IsSuccess)
         {
-            return Unauthorized(ApiErrorResponse.Unauthorized("User not found"));
+            return result.ToProblemDetails(this);
         }
 
         var response = new CurrentUserResponse(
-            result.UserId,
-            result.Email,
-            result.Name,
-            result.TenantId,
-            result.PermissionCodes,
-            result.Notifications.Select(n => new NotificationResponse(
+            result.Value!.UserId,
+            result.Value!.Email,
+            result.Value!.Name,
+            result.Value!.TenantId,
+            result.Value!.PermissionCodes,
+            result.Value!.Notifications.Select(n => new NotificationResponse(
                 n.NotificationId,
                 n.Title,
                 n.Message,
                 n.Data,
                 n.WasRead,
-                n.CreatedAt)));
+                n.CreatedAt)));        
 
-        return Ok(ApiResponse<CurrentUserResponse>.From(response));
+        return Ok(CollectionResponse<CurrentUserResponse>.From(response));
+    }
+
+    private UserResponse ToDefaultResponse(UserDto dto)
+    {
+        return new UserResponse(
+            dto.UserId, 
+            dto.Name, 
+            dto.Email, 
+            dto.Status, 
+            dto.CreatedAt,
+            dto.CreatedBy != null ? new UserAuditResponse(
+                dto.CreatedBy.UserId,
+                dto.CreatedBy.Name,
+                dto.CreatedBy.Email) : null,
+            dto.UpdatedAt,
+            dto.UpdatedBy != null ? new UserAuditResponse(
+                dto.UpdatedBy.UserId,
+                dto.UpdatedBy.Name,
+                dto.UpdatedBy.Email) : null
+            );
     }
 }

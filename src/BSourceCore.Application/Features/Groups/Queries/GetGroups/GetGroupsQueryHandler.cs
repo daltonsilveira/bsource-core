@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Groups.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Groups.Queries.GetGroups;
 
-public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, IEnumerable<GroupDto>>
+public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, Result<CollectionResult<GroupDto>>>
 {
     private readonly IGroupRepository _groupRepository;
     private readonly IUserContext _userContext;
@@ -23,7 +24,7 @@ public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, IEnumerable
         _logger = logger;
     }
 
-    public async Task<IEnumerable<GroupDto>> Handle(
+    public async Task<Result<CollectionResult<GroupDto>>> Handle(
         GetGroupsQuery request,
         CancellationToken cancellationToken)
     {
@@ -31,12 +32,18 @@ public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, IEnumerable
 
         var groups = await _groupRepository.GetAllByTenantAsync(request.TenantId, cancellationToken);
 
-        return groups.Select(g => new GroupDto(
+        var items = groups.Select(g => new GroupDto(
             g.GroupId,
             g.TenantId,
             g.Name,
             g.Description,
             g.Status.ToString(),
-            g.CreatedAt));
+            g.CreatedAt)).ToList();
+
+        return Result<CollectionResult<GroupDto>>.Success(new CollectionResult<GroupDto>
+        {
+            Results = items,
+            Total = items.Count
+        });
     }
 }

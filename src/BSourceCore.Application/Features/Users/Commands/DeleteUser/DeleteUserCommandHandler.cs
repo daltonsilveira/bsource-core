@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Domain.Enums;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Users.Commands.DeleteUser;
 
-public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
+public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, Result>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -26,7 +27,7 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
         _logger = logger;
     }
 
-    public async Task<bool> Handle(
+    public async Task<Result> Handle(
         DeleteUserCommand request,
         CancellationToken cancellationToken)
     {
@@ -42,6 +43,6 @@ public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>
 
         _logger.LogInformation("User deleted: {UserId}", user.UserId);
 
-        return true;
+        return Result.Success();
     }
 }

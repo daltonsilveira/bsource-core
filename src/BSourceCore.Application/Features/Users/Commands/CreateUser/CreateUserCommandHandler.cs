@@ -2,21 +2,25 @@ using System.Security.Cryptography;
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Application.Features.Users.Notifications.UserCreated;
+using BSourceCore.Application.Features.Users.Queries.GetUserById;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Users.Commands.CreateUser;
 
-public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, CreateUserResult>
+public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Result<UserDto>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserContext _userContext;
     private readonly IPublisher _publisher;
+    private readonly IMediator _mediator;
     private readonly ILogger<CreateUserCommandHandler> _logger;
 
     public CreateUserCommandHandler(
@@ -25,6 +29,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         IPasswordHasher passwordHasher,
         IUserContext userContext,
         IPublisher publisher,
+        IMediator mediator,
         ILogger<CreateUserCommandHandler> logger)
     {
         _userRepository = userRepository;
@@ -32,10 +37,11 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         _passwordHasher = passwordHasher;
         _userContext = userContext;
         _publisher = publisher;
+        _mediator = mediator;
         _logger = logger;
     }
 
-    public async Task<CreateUserResult> Handle(
+    public async Task<Result<UserDto>> Handle(
         CreateUserCommand request,
         CancellationToken cancellationToken)
     {
@@ -45,10 +51,12 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
         if (existingUser is not null)
         {
             _logger.LogWarning("User with email {Email} already exists", request.Email);
-            throw new InvalidOperationException($"User with email '{request.Email}' already exists");
+            return Result<UserDto>.Fail(new Error(
+                "User.EmailConflict",
+                $"User with email '{request.Email}' already exists",
+                ErrorType.Conflict));
         }
 
-        // Generate random 8-character password (will be reset on first access)
         var temporaryPassword = GenerateRandomPassword(8);
         var passwordHash = _passwordHasher.Hash(temporaryPassword);
 
@@ -63,7 +71,6 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
 
         _logger.LogInformation("User created with Id: {UserId}", user.UserId);
 
-        // Publish notification to send welcome email
         _ = Task.Run(async () => await _publisher.Publish(new UserCreatedNotification(
                 user.UserId,
                 user.TenantId,
@@ -71,7 +78,9 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Creat
                 user.Email,
                 temporaryPassword), CancellationToken.None));
 
-        return new CreateUserResult(user.UserId, user.Name, user.Email);
+        var result = await _mediator.Send(new GetUserByIdQuery(user.UserId), cancellationToken);
+
+        return Result<UserDto>.Success(result.Value!);
     }
 
     private static string GenerateRandomPassword(int length)

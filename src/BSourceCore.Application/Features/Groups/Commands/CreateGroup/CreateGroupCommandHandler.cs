@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Groups.Commands.CreateGroup;
 
-public class CreateGroupCommandHandler : IRequestHandler<CreateGroupCommand, CreateGroupResult>
+public class CreateGroupCommandHandler : IRequestHandler<CreateGroupCommand, Result<CreateGroupResult>>
 {
     private readonly IGroupRepository _groupRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -26,7 +27,7 @@ public class CreateGroupCommandHandler : IRequestHandler<CreateGroupCommand, Cre
         _logger = logger;
     }
 
-    public async Task<CreateGroupResult> Handle(
+    public async Task<Result<CreateGroupResult>> Handle(
         CreateGroupCommand request,
         CancellationToken cancellationToken)
     {
@@ -36,7 +37,10 @@ public class CreateGroupCommandHandler : IRequestHandler<CreateGroupCommand, Cre
         if (existingGroup is not null)
         {
             _logger.LogWarning("Group with name {Name} already exists in tenant {TenantId}", request.Name, request.TenantId);
-            throw new InvalidOperationException($"Group with name '{request.Name}' already exists");
+            return Result<CreateGroupResult>.Fail(new Error(
+                "Group.NameConflict",
+                $"Group with name '{request.Name}' already exists",
+                ErrorType.Conflict));
         }
 
         var group = new Group(request.TenantId, request.Name, request.Description);
@@ -46,6 +50,7 @@ public class CreateGroupCommandHandler : IRequestHandler<CreateGroupCommand, Cre
 
         _logger.LogInformation("Group created with Id: {GroupId}", group.GroupId);
 
-        return new CreateGroupResult(group.GroupId, group.Name);
+        return Result<CreateGroupResult>.Success(
+            new CreateGroupResult(group.GroupId, group.Name));
     }
 }

@@ -2,12 +2,13 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Notifications.Queries.GetNotificationById;
 
-public class GetNotificationByIdQueryHandler : IRequestHandler<GetNotificationByIdQuery, NotificationDto?>
+public class GetNotificationByIdQueryHandler : IRequestHandler<GetNotificationByIdQuery, Result<NotificationDto>>
 {
     private readonly INotificationRepository _notificationRepository;
     private readonly IUserContext _userContext;
@@ -23,7 +24,7 @@ public class GetNotificationByIdQueryHandler : IRequestHandler<GetNotificationBy
         _logger = logger;
     }
 
-    public async Task<NotificationDto?> Handle(
+    public async Task<Result<NotificationDto>> Handle(
         GetNotificationByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -34,15 +35,20 @@ public class GetNotificationByIdQueryHandler : IRequestHandler<GetNotificationBy
         if (notification is null)
         {
             _logger.LogWarning("Notification not found with Id: {NotificationId}", request.NotificationId);
-            return null;
+            return Result<NotificationDto>.Fail(new Error(
+                "Notification.NotFound",
+                $"Notification with Id '{request.NotificationId}' not found",
+                ErrorType.NotFound));
         }
 
-        return new NotificationDto(
+        return Result<NotificationDto>.Success(new NotificationDto(
             notification.NotificationId,
             notification.Title,
             notification.Message,
             notification.Data,
             notification.Recipients.Any(r => r.UserId == _userContext.UserId && r.WasRead),
-            notification.CreatedAt);
+            notification.CreatedAt,
+            notification.Recipients.Where(r => r.UserId == _userContext.UserId).Select(r => r.NotificationRecipientId).FirstOrDefault())
+            );
     }
 }

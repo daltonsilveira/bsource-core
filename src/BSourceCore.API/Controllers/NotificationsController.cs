@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Notifications.Commands.DeleteRecipient;
 using BSourceCore.Application.Features.Notifications.Commands.UpdateRecipientWasRead;
 using BSourceCore.Application.Features.Notifications.Queries.GetNotificationById;
@@ -30,16 +31,21 @@ public class NotificationsController : ControllerBase
     /// Gets all notifications for the authenticated user
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<NotificationResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<NotificationResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "notifications.read")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> List()
     {
-        _logger.LogInformation("Getting all notifications for authenticated user");
+        _logger.LogInformation("Listing notifications for authenticated user");
 
         var query = new GetNotificationsQuery();
         var result = await _mediator.Send(query);
 
-        var response = result.Select(n => new NotificationResponse(
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
+
+        var response = result.Value!.Results.Select(n => new NotificationResponse(
             n.NotificationId,
             n.Title,
             n.Message,
@@ -47,15 +53,15 @@ public class NotificationsController : ControllerBase
             n.WasRead,
             n.CreatedAt));
 
-        return Ok(ApiResponse<NotificationResponse>.From(response));
+        return Ok(CollectionResponse<NotificationResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a notification by ID
     /// </summary>
     [HttpGet("{notificationId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<NotificationResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<NotificationResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "notifications.read")]
     public async Task<IActionResult> GetById(Guid notificationId)
     {
@@ -64,20 +70,20 @@ public class NotificationsController : ControllerBase
         var query = new GetNotificationByIdQuery(notificationId);
         var result = await _mediator.Send(query);
 
-        if (result is null)
+        if (!result.IsSuccess)
         {
-            return NotFound(ApiErrorResponse.NotFound($"Notification with Id '{notificationId}' not found"));
+            return result.ToProblemDetails(this);
         }
 
         var response = new NotificationResponse(
-            result.NotificationId,
-            result.Title,
-            result.Message,
-            result.Data,
-            result.WasRead,
-            result.CreatedAt);
+            result.Value!.NotificationId,
+            result.Value!.Title,
+            result.Value!.Message,
+            result.Value!.Data,
+            result.Value!.WasRead,
+            result.Value!.CreatedAt);
 
-        return Ok(ApiResponse<NotificationResponse>.From(response));
+        return Ok(CollectionResponse<NotificationResponse>.From(response));
     }
 
     /// <summary>
@@ -86,32 +92,43 @@ public class NotificationsController : ControllerBase
     /// If notificationId is null, marks all notifications as read.
     /// </summary>
     [HttpPatch("read")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [Authorize(Policy = "notifications.update")]
     public async Task<IActionResult> MarkAsRead([FromQuery] Guid? notificationId)
     {
         _logger.LogInformation("Marking notifications as read. NotificationId: {NotificationId}", notificationId);
 
         var command = new UpdateRecipientWasReadCommand(notificationId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-        return Ok();
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
+
+        return NoContent();
     }
 
     /// <summary>
     /// Deletes a notification recipient (removes notification for the authenticated user)
     /// </summary>
     [HttpDelete("recipients/{notificationRecipientId:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [Authorize(Policy = "notifications.delete")]
     public async Task<IActionResult> DeleteRecipient(Guid notificationRecipientId)
     {
         _logger.LogInformation("Deleting notification recipient: {NotificationRecipientId}", notificationRecipientId);
 
         var command = new DeleteRecipientCommand(notificationRecipientId);
-        await _mediator.Send(command);
 
-        return Ok();
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+        {
+            return result.ToProblemDetails(this);
+        }
+
+        return NoContent();
     }
 }
