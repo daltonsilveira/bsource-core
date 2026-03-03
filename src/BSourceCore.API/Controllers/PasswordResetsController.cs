@@ -28,8 +28,8 @@ public class PasswordResetsController : ControllerBase
     /// </summary>
     [HttpPatch("confirm")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Confirm([FromBody] ConfirmPasswordResetRequest request)
     {
         _logger.LogInformation("Password reset confirmation attempt");
@@ -42,12 +42,12 @@ public class PasswordResetsController : ControllerBase
 
             _logger.LogInformation("Password reset confirmed successfully");
 
-            return Ok(ApiResponse.Ok());
+            return NoContent();
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Password reset confirmation failed: {Message}", ex.Message);
-            return BadRequest(ApiResponse.Fail(ex.Message));
+            return BadRequest(ApiErrorResponse.BadRequest(ex.Message));
         }
     }
 }

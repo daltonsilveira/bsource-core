@@ -32,8 +32,8 @@ public class UsersController : ControllerBase
     /// Creates a new user
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "users.create")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
@@ -57,15 +57,15 @@ public class UsersController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { userId = result.UserId },
-            ApiResponse<UserResponse>.Ok(response));
+            PagedResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a user by ID
     /// </summary>
     [HttpGet("{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetById(Guid userId)
     {
@@ -76,7 +76,7 @@ public class UsersController : ControllerBase
 
         if (result is null)
         {
-            return NotFound(ApiResponse.Fail($"User with Id '{userId}' not found"));
+            return NotFound(ApiErrorResponse.NotFound($"User with Id '{userId}' not found"));
         }
 
         var response = new UserResponse(
@@ -87,14 +87,14 @@ public class UsersController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(ApiResponse<UserResponse>.Ok(response));
+        return Ok(PagedResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all users by tenant
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<UserResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
     {
@@ -111,15 +111,15 @@ public class UsersController : ControllerBase
             u.Status,
             u.CreatedAt));
 
-        return Ok(ApiResponse<IEnumerable<UserResponse>>.Ok(response));
+        return Ok(PagedResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Updates a user
     /// </summary>
     [HttpPut("{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.update")]
     public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
     {
@@ -136,15 +136,15 @@ public class UsersController : ControllerBase
             "Active",
             DateTimeOffset.UtcNow);
 
-        return Ok(ApiResponse<UserResponse>.Ok(response));
+        return Ok(PagedResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Deletes a user (soft delete)
     /// </summary>
     [HttpDelete("{userId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.delete")]
     public async Task<IActionResult> Delete(Guid userId)
     {
@@ -153,6 +153,6 @@ public class UsersController : ControllerBase
         var command = new DeleteUserCommand(userId);
         await _mediator.Send(command);
 
-        return Ok(ApiResponse.Ok());
+        return NoContent();
     }
 }
