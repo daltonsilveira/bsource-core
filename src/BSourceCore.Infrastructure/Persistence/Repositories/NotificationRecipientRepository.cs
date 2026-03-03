@@ -21,7 +21,14 @@ public class NotificationRecipientRepository : Repository<NotificationRecipient>
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<NotificationRecipient?> GetByNotificationAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<NotificationRecipient>> ListByNotificationAsync(Guid notificationId, CancellationToken cancellationToken = default)
+    {
+        return await _readContext.NotificationRecipients
+            .Where(nr => nr.NotificationId.Equals(notificationId))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<NotificationRecipient?> GetByNotificationAndUserAsync(Guid notificationId, Guid userId, CancellationToken cancellationToken = default)
     {
         return await _readContext.NotificationRecipients
             .Where(nr => nr.NotificationId.Equals(notificationId)

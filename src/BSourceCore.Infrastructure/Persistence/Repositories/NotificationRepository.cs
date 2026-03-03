@@ -14,7 +14,7 @@ public class NotificationRepository : Repository<Notification>, INotificationRep
     {
     }
 
-    public async Task<IEnumerable<Notification>> GetAllByUserAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Notification>> ListByUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _readContext.Notifications
             .Include(n => n.Recipients)

@@ -155,4 +155,32 @@ public class UsersController : ControllerBase
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Gets the current authenticated user's information
+    /// </summary>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public IActionResult GetCurrentUser()
+    {
+        // var userId = User.FindFirst("sub")?.Value ?? User.FindFirst("userId")?.Value;
+        // var email = User.FindFirst("email")?.Value;
+        // var name = User.FindFirst("name")?.Value;
+        // var tenantId = User.FindFirst("tenantId")?.Value;
+
+        // var response = new CurrentUserResponse
+        // (
+        //     userId,
+        //     email,
+        //     name,
+        //     tenantId,
+        //     User.Claims.Where(c => c.Type == "permission").Select(c => c.Value).ToList()
+        //     //Notifications = [] //implementar
+        // );
+
+        // return Ok(ApiResponse<CurrentUserResponse>.From(response));
+        return Ok();
+    }
 }

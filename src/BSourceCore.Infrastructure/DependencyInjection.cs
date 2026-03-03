@@ -37,6 +37,7 @@ public static class DependencyInjection
             configuration.GetSection(BSourceNotifierOptions.SectionName));
 
         // Repositories
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IGroupRepository, GroupRepository>();

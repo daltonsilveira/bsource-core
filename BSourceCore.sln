@@ -3,15 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.API", "BSourceCore.API\BSourceCore.API.csproj", "{C6C126ED-90C9-4FA8-B127-9D877CC9C49E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.API", "src\BSourceCore.API\BSourceCore.API.csproj", "{C6C126ED-90C9-4FA8-B127-9D877CC9C49E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Domain", "BSourceCore.Domain\BSourceCore.Domain.csproj", "{85843E69-D8FF-46C9-9C02-217A2A4E63EE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Domain", "src\BSourceCore.Domain\BSourceCore.Domain.csproj", "{85843E69-D8FF-46C9-9C02-217A2A4E63EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Application", "BSourceCore.Application\BSourceCore.Application.csproj", "{8571722B-29CE-40F1-8CA9-96D48129901D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Application", "src\BSourceCore.Application\BSourceCore.Application.csproj", "{8571722B-29CE-40F1-8CA9-96D48129901D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Infrastructure", "BSourceCore.Infrastructure\BSourceCore.Infrastructure.csproj", "{4085DC98-D9EC-4FBC-9EFA-2D6F520135E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Infrastructure", "src\BSourceCore.Infrastructure\BSourceCore.Infrastructure.csproj", "{4085DC98-D9EC-4FBC-9EFA-2D6F520135E6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Shared", "BSourceCore.Shared\BSourceCore.Shared.csproj", "{215FCD86-D256-46FF-A8AF-0ADCCF3F3CA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BSourceCore.Shared", "src\BSourceCore.Shared\BSourceCore.Shared.csproj", "{215FCD86-D256-46FF-A8AF-0ADCCF3F3CA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

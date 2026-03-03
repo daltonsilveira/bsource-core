@@ -29,7 +29,7 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
     {
         _logger.LogInformation("Getting notifications for user: {UserId}", _userContext.UserId);
 
-        var notifications = await _notificationRepository.GetAllByUserAsync(_userContext.UserId!.Value, cancellationToken);
+        var notifications = await _notificationRepository.ListByUserAsync(_userContext.UserId!.Value, cancellationToken);
 
         return notifications.Select(n => new NotificationDto(
             n.NotificationId,

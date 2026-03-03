@@ -4,6 +4,7 @@ using BSourceCore.Domain.Interfaces;
 using BSourceCore.Infrastructure.Persistence.Seed;
 using BSourceCore.Shared.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Infrastructure.Persistence;
 
@@ -11,14 +12,17 @@ public class WriteDbContext : DbContext
 {
     private readonly ITenantContext _tenantContext;
     private readonly IUserContext _userContext;
+    private readonly ILogger<WriteDbContext> _logger;
 
     public WriteDbContext(
         DbContextOptions<WriteDbContext> options,
         IUserContext userContext,
-        ITenantContext tenantContext) : base(options)
+        ITenantContext tenantContext,
+        ILogger<WriteDbContext> logger) : base(options)
     {
         _tenantContext = tenantContext;
         _userContext = userContext;
+        _logger = logger;
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -33,6 +37,8 @@ public class WriteDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        _logger.LogInformation("Applying entity configurations for WriteDbContext");
+
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(WriteDbContext).Assembly);
 

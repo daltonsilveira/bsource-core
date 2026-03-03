@@ -33,7 +33,7 @@ public class UpdateRecipientWasReadCommandHandler : IRequestHandler<UpdateRecipi
 
         if(request.NotificationId is not null)
         {
-            var recipient = await _notificationRecipientRepository.GetByNotificationAsync(request.NotificationId.Value, _userContext.UserId.Value, cancellationToken);
+            var recipient = await _notificationRecipientRepository.GetByNotificationAndUserAsync(request.NotificationId.Value, _userContext.UserId.Value, cancellationToken);
             if (recipient is null)
             {
                 throw new KeyNotFoundException($"Notification recipient with Notification Id '{request.NotificationId}' and User Id '{_userContext.UserId}' not found");

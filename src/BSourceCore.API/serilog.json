@@ -1,8 +1,14 @@
 {
   "Serilog": {
-    "Using": [ "Serilog.Sinks.Console", "Serilog.Sinks.File" ],
+    "Using": [
+      "Serilog.Sinks.Console",
+      "Serilog.Sinks.File",
+      "Serilog.Enrichers.Environment",
+      "Serilog.Enrichers.Thread",
+      "Serilog.Enrichers.CorrelationId"
+    ],
     "MinimumLevel": {
-      "Default": "Information",
+      "Default": "Debug",
       "Override": {
         "Microsoft": "Warning",
         "Microsoft.AspNetCore": "Warning",
@@ -14,7 +20,6 @@
       {
         "Name": "Console",
         "Args": {
-          "theme": "Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme::Code, Serilog.Sinks.Console",
           "outputTemplate": "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}"
         }
       },
