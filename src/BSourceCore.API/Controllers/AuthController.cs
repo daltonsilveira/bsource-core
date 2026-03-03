@@ -29,7 +29,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("login")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(PagedResponse<TokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -55,7 +55,7 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("Login successful for user: {UserId}", result.UserId);
 
-            return Ok(PagedResponse<TokenResponse>.From(response));
+            return Ok(ApiResponse<TokenResponse>.From(response));
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -69,7 +69,7 @@ public class AuthController : ControllerBase
     /// </summary>
     [HttpPost("refresh")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(PagedResponse<TokenResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TokenResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
     {
@@ -90,7 +90,7 @@ public class AuthController : ControllerBase
                 result.Name,
                 result.Permissions);
 
-            return Ok(PagedResponse<TokenResponse>.From(response));
+            return Ok(ApiResponse<TokenResponse>.From(response));
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -121,6 +121,6 @@ public class AuthController : ControllerBase
             TenantId = tenantId
         };
 
-        return Ok(PagedResponse<object>.From(response));
+        return Ok(ApiResponse<object>.From(response));
     }
 }

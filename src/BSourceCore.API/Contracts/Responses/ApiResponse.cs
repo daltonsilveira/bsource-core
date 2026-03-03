@@ -7,10 +7,10 @@ public record PagedResponse<T>
     public IEnumerable<T> Results { get; init; } = [];
     public int Total { get; init; }
 
-    public static PagedResponse<T> From(T item) =>
+    public static ApiResponse<T> From(T item) =>
         new() { Results = [item], Total = 1 };
 
-    public static PagedResponse<T> From(IEnumerable<T> items)
+    public static ApiResponse<T> From(IEnumerable<T> items)
     {
         if (items is ICollection<T> collection)
             return new() { Results = collection, Total = collection.Count };

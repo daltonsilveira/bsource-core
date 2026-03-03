@@ -36,7 +36,7 @@ public class GroupsController : ControllerBase
     /// Creates a new group
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(PagedResponse<GroupResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.create")]
     public async Task<IActionResult> Create([FromBody] CreateGroupRequest request)
@@ -61,14 +61,14 @@ public class GroupsController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { groupId = result.GroupId },
-            PagedResponse<GroupResponse>.From(response));
+            ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a group by ID
     /// </summary>
     [HttpGet("{groupId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetById(Guid groupId)
@@ -91,14 +91,14 @@ public class GroupsController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(PagedResponse<GroupResponse>.From(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all groups by tenant
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
     {
@@ -115,14 +115,14 @@ public class GroupsController : ControllerBase
             g.Status,
             g.CreatedAt));
 
-        return Ok(PagedResponse<GroupResponse>.From(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>
     /// Updates a group
     /// </summary>
     [HttpPut("{groupId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> Update(Guid groupId, [FromBody] UpdateGroupRequest request)
@@ -140,7 +140,7 @@ public class GroupsController : ControllerBase
             "Active",
             DateTimeOffset.UtcNow);
 
-        return Ok(PagedResponse<GroupResponse>.From(response));
+        return Ok(ApiResponse<GroupResponse>.From(response));
     }
 
     /// <summary>

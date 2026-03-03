@@ -31,7 +31,7 @@ public class PermissionsController : ControllerBase
     /// Creates a new permission
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(PagedResponse<PermissionResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "permissions.create")]
     public async Task<IActionResult> Create([FromBody] CreatePermissionRequest request)
@@ -56,14 +56,14 @@ public class PermissionsController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { permissionId = result.PermissionId },
-            PagedResponse<PermissionResponse>.From(response));
+            ApiResponse<PermissionResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a permission by ID
     /// </summary>
     [HttpGet("{permissionId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<PermissionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "permissions.read")]
     public async Task<IActionResult> GetById(Guid permissionId)
@@ -86,14 +86,14 @@ public class PermissionsController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(PagedResponse<PermissionResponse>.From(response));
+        return Ok(ApiResponse<PermissionResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all permissions
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResponse<PermissionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "permissions.read")]
     public async Task<IActionResult> GetAll()
     {
@@ -110,14 +110,14 @@ public class PermissionsController : ControllerBase
             p.Status,
             p.CreatedAt));
 
-        return Ok(PagedResponse<PermissionResponse>.From(response));
+        return Ok(ApiResponse<PermissionResponse>.From(response));
     }
 
     /// <summary>
     /// Updates a permission
     /// </summary>
     [HttpPut("{permissionId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<PermissionResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "permissions.update")]
     public async Task<IActionResult> Update(Guid permissionId, [FromBody] UpdatePermissionRequest request)
@@ -135,6 +135,6 @@ public class PermissionsController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(PagedResponse<PermissionResponse>.From(response));
+        return Ok(ApiResponse<PermissionResponse>.From(response));
     }
 }

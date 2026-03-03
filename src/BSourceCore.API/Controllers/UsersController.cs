@@ -32,7 +32,7 @@ public class UsersController : ControllerBase
     /// Creates a new user
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "users.create")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
@@ -57,14 +57,14 @@ public class UsersController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { userId = result.UserId },
-            PagedResponse<UserResponse>.From(response));
+            ApiResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a user by ID
     /// </summary>
     [HttpGet("{userId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetById(Guid userId)
@@ -87,14 +87,14 @@ public class UsersController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(PagedResponse<UserResponse>.From(response));
+        return Ok(ApiResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all users by tenant
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
     {
@@ -111,14 +111,14 @@ public class UsersController : ControllerBase
             u.Status,
             u.CreatedAt));
 
-        return Ok(PagedResponse<UserResponse>.From(response));
+        return Ok(ApiResponse<UserResponse>.From(response));
     }
 
     /// <summary>
     /// Updates a user
     /// </summary>
     [HttpPut("{userId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<UserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "users.update")]
     public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
@@ -136,7 +136,7 @@ public class UsersController : ControllerBase
             "Active",
             DateTimeOffset.UtcNow);
 
-        return Ok(PagedResponse<UserResponse>.From(response));
+        return Ok(ApiResponse<UserResponse>.From(response));
     }
 
     /// <summary>

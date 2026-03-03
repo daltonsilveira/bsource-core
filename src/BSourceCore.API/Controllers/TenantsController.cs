@@ -30,7 +30,7 @@ public class TenantsController : ControllerBase
     /// Creates a new tenant
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(PagedResponse<TenantResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "tenants.create")]
     public async Task<IActionResult> Create([FromBody] CreateTenantRequest request)
@@ -55,14 +55,14 @@ public class TenantsController : ControllerBase
         return CreatedAtAction(
             nameof(GetById),
             new { tenantId = result.TenantId },
-            PagedResponse<TenantResponse>.From(response));
+            ApiResponse<TenantResponse>.From(response));
     }
 
     /// <summary>
     /// Gets a tenant by ID
     /// </summary>
     [HttpGet("{tenantId:guid}")]
-    [ProducesResponseType(typeof(PagedResponse<TenantResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "tenants.read")]
     public async Task<IActionResult> GetById(Guid tenantId)
@@ -85,14 +85,14 @@ public class TenantsController : ControllerBase
             result.Status,
             result.CreatedAt);
 
-        return Ok(PagedResponse<TenantResponse>.From(response));
+        return Ok(ApiResponse<TenantResponse>.From(response));
     }
 
     /// <summary>
     /// Gets all tenants
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(PagedResponse<TenantResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "tenants.read")]
     public async Task<IActionResult> GetAll()
     {
@@ -109,6 +109,6 @@ public class TenantsController : ControllerBase
             t.Status,
             t.CreatedAt));
 
-        return Ok(PagedResponse<TenantResponse>.From(response));
+        return Ok(ApiResponse<TenantResponse>.From(response));
     }
 }
