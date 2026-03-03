@@ -37,6 +37,7 @@ public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuer
             n.Message,
             n.Data,
             n.Recipients.Any(r => r.UserId == _userContext.UserId && r.WasRead),
-            n.CreatedAt));
+            n.CreatedAt,
+            n.Recipients.Where(r => r.UserId == _userContext.UserId).Select(r => r.NotificationRecipientId).FirstOrDefault()));
     }
 }

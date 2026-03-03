@@ -49,7 +49,6 @@ public class AuthController : ControllerBase
                 result.UserId,
                 result.Email,
                 result.Name,
-                result.Permissions,
                 result.RequiresPasswordReset,
                 result.PasswordResetToken);
 
@@ -87,8 +86,7 @@ public class AuthController : ControllerBase
                 result.ExpiresAt,
                 result.UserId,
                 result.Email,
-                result.Name,
-                result.Permissions);
+                result.Name);
 
             return Ok(ApiResponse<TokenResponse>.From(response));
         }

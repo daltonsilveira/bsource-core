@@ -40,7 +40,6 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, T
             tokenResult.ExpiresAt,
             Guid.Empty,
             string.Empty,
-            string.Empty,
-            Enumerable.Empty<string>());
+            string.Empty);
     }
 }

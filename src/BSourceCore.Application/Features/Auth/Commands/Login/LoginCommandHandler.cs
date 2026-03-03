@@ -56,16 +56,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             return await HandleFirstAccessAsync(user, cancellationToken);
         }
 
-        // Get user permissions through groups
-        var permissions = await _userRepository.GetUserPermissionsAsync(user.UserId, cancellationToken);
-
         // Generate tokens
         var tokenResult = await _tokenService.GenerateTokenAsync(new TokenSubject(
             user.UserId,
             user.Name,
             user.Email,
-            user.TenantId,
-            permissions.Select(p => p.Code)
+            user.TenantId
         ), cancellationToken);
 
         return new TokenDto(
@@ -74,8 +70,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             tokenResult.ExpiresAt,
             user.UserId,
             user.Email,
-            user.Name,
-            permissions.Select(p => p.Code));
+            user.Name);
     }
 
     private async Task<TokenDto> HandleFirstAccessAsync(User user, CancellationToken cancellationToken)
@@ -100,7 +95,6 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, TokenDto>
             UserId: user.UserId,
             Email: user.Email,
             Name: user.Name,
-            Permissions: Enumerable.Empty<string>(),
             RequiresPasswordReset: true,
             PasswordResetToken: passwordReset.Token);
     }

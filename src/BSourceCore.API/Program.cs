@@ -4,6 +4,7 @@ using Asp.Versioning;
 using BSourceCore.API.Middleware;
 using BSourceCore.Application;
 using BSourceCore.Infrastructure;
+using BSourceCore.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -74,28 +75,28 @@ try
     builder.Services.AddAuthorization(options =>
     {
         // Tenant policies
-        options.AddPolicy("tenants.create", policy => policy.RequireClaim("permission", "tenants.create"));
-        options.AddPolicy("tenants.read", policy => policy.RequireClaim("permission", "tenants.read"));
-        options.AddPolicy("tenants.update", policy => policy.RequireClaim("permission", "tenants.update"));
-        options.AddPolicy("tenants.delete", policy => policy.RequireClaim("permission", "tenants.delete"));
+        options.AddPolicy("tenants.create", policy => policy.Requirements.Add(new PermissionRequirement("tenants.create")));
+        options.AddPolicy("tenants.read", policy => policy.Requirements.Add(new PermissionRequirement("tenants.read")));
+        options.AddPolicy("tenants.update", policy => policy.Requirements.Add(new PermissionRequirement("tenants.update")));
+        options.AddPolicy("tenants.delete", policy => policy.Requirements.Add(new PermissionRequirement("tenants.delete")));
 
         // User policies
-        options.AddPolicy("users.create", policy => policy.RequireClaim("permission", "users.create"));
-        options.AddPolicy("users.read", policy => policy.RequireClaim("permission", "users.read"));
-        options.AddPolicy("users.update", policy => policy.RequireClaim("permission", "users.update"));
-        options.AddPolicy("users.delete", policy => policy.RequireClaim("permission", "users.delete"));
+        options.AddPolicy("users.create", policy => policy.Requirements.Add(new PermissionRequirement("users.create")));
+        options.AddPolicy("users.read", policy => policy.Requirements.Add(new PermissionRequirement("users.read")));
+        options.AddPolicy("users.update", policy => policy.Requirements.Add(new PermissionRequirement("users.update")));
+        options.AddPolicy("users.delete", policy => policy.Requirements.Add(new PermissionRequirement("users.delete")));
 
         // Group policies
-        options.AddPolicy("groups.create", policy => policy.RequireClaim("permission", "groups.create"));
-        options.AddPolicy("groups.read", policy => policy.RequireClaim("permission", "groups.read"));
-        options.AddPolicy("groups.update", policy => policy.RequireClaim("permission", "groups.update"));
-        options.AddPolicy("groups.delete", policy => policy.RequireClaim("permission", "groups.delete"));
+        options.AddPolicy("groups.create", policy => policy.Requirements.Add(new PermissionRequirement("groups.create")));
+        options.AddPolicy("groups.read", policy => policy.Requirements.Add(new PermissionRequirement("groups.read")));
+        options.AddPolicy("groups.update", policy => policy.Requirements.Add(new PermissionRequirement("groups.update")));
+        options.AddPolicy("groups.delete", policy => policy.Requirements.Add(new PermissionRequirement("groups.delete")));
 
         // Permission policies
-        options.AddPolicy("permissions.create", policy => policy.RequireClaim("permission", "permissions.create"));
-        options.AddPolicy("permissions.read", policy => policy.RequireClaim("permission", "permissions.read"));
-        options.AddPolicy("permissions.update", policy => policy.RequireClaim("permission", "permissions.update"));
-        options.AddPolicy("permissions.delete", policy => policy.RequireClaim("permission", "permissions.delete"));
+        options.AddPolicy("permissions.create", policy => policy.Requirements.Add(new PermissionRequirement("permissions.create")));
+        options.AddPolicy("permissions.read", policy => policy.Requirements.Add(new PermissionRequirement("permissions.read")));
+        options.AddPolicy("permissions.update", policy => policy.Requirements.Add(new PermissionRequirement("permissions.update")));
+        options.AddPolicy("permissions.delete", policy => policy.Requirements.Add(new PermissionRequirement("permissions.delete")));
     });
 
     // API Versioning

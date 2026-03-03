@@ -5,4 +5,5 @@ public record CurrentUserResponse(
     string Email,
     string Name,
     Guid TenantId,
-    List<string> PermissionCodes);
+    IEnumerable<string> PermissionCodes,
+    IEnumerable<NotificationResponse> Notifications);

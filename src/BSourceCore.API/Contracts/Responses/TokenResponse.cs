@@ -7,6 +7,5 @@ public record TokenResponse(
     Guid UserId,
     string Email,
     string Name,
-    IEnumerable<string> Permissions,
     bool RequiresPasswordReset = false,
     string? PasswordResetToken = null);

@@ -4,6 +4,7 @@ using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Users.Commands.CreateUser;
 using BSourceCore.Application.Features.Users.Commands.DeleteUser;
 using BSourceCore.Application.Features.Users.Commands.UpdateUser;
+using BSourceCore.Application.Features.Users.Queries.GetCurrentUser;
 using BSourceCore.Application.Features.Users.Queries.GetUserById;
 using BSourceCore.Application.Features.Users.Queries.GetUsers;
 using MediatR;
@@ -161,26 +162,33 @@ public class UsersController : ControllerBase
     /// </summary>
     [HttpGet("me")]
     [Authorize]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CurrentUserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public IActionResult GetCurrentUser()
+    public async Task<IActionResult> GetCurrentUser()
     {
-        // var userId = User.FindFirst("sub")?.Value ?? User.FindFirst("userId")?.Value;
-        // var email = User.FindFirst("email")?.Value;
-        // var name = User.FindFirst("name")?.Value;
-        // var tenantId = User.FindFirst("tenantId")?.Value;
+        _logger.LogInformation("Getting current user data");
 
-        // var response = new CurrentUserResponse
-        // (
-        //     userId,
-        //     email,
-        //     name,
-        //     tenantId,
-        //     User.Claims.Where(c => c.Type == "permission").Select(c => c.Value).ToList()
-        //     //Notifications = [] //implementar
-        // );
+        var result = await _mediator.Send(new GetCurrentUserQuery());
 
-        // return Ok(ApiResponse<CurrentUserResponse>.From(response));
-        return Ok();
+        if (result is null)
+        {
+            return Unauthorized(ApiErrorResponse.Unauthorized("User not found"));
+        }
+
+        var response = new CurrentUserResponse(
+            result.UserId,
+            result.Email,
+            result.Name,
+            result.TenantId,
+            result.PermissionCodes,
+            result.Notifications.Select(n => new NotificationResponse(
+                n.NotificationId,
+                n.Title,
+                n.Message,
+                n.Data,
+                n.WasRead,
+                n.CreatedAt)));
+
+        return Ok(ApiResponse<CurrentUserResponse>.From(response));
     }
 }

@@ -42,12 +42,6 @@ public class TokenService : ITokenService
             new("tenantId", tokenData.TenantId.ToString())
         };
 
-        // Add permissions as claims
-        foreach (var code in tokenData.PermissionCodes)
-        {
-            claims.Add(new Claim("permission", code));
-        }
-
         var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
         
         var token = new JwtSecurityToken(

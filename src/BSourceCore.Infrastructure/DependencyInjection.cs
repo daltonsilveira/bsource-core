@@ -7,6 +7,7 @@ using BSourceCore.Infrastructure.Persistence.Repositories;
 using BSourceCore.Infrastructure.Repositories;
 using BSourceCore.Infrastructure.Services;
 using BSourceCore.Shared.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -55,6 +56,9 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IWebSocketNotificationService, WebSocketNotificationService>();
+
+        // Authorization
+        services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         // HttpClients        
         services.AddHttpClient("BSourceNotifier", (serviceProvider, client) =>
