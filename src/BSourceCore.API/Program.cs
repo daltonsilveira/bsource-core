@@ -4,8 +4,10 @@ using Asp.Versioning;
 using BSourceCore.API.Middleware;
 using BSourceCore.Application;
 using BSourceCore.Infrastructure;
+using BSourceCore.Infrastructure.Persistence;
 using BSourceCore.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -166,7 +168,15 @@ try
 
     var app = builder.Build();
 
-    
+    using (var scope = app.Services.CreateScope())
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
+
+        logger.LogInformation("Applying database migrations");
+        dbContext.Database.Migrate();
+        logger.LogInformation("Database migrations applied");
+    }
 
     // Configure the HTTP request pipeline.
     app.UseExceptionHandler();

@@ -53,6 +53,9 @@ CREATE DATABASE BSourceCore_dev;
 
 ### Executar Migrations
 
+As migrations existentes (incluindo SeedData) são aplicadas automaticamente ao iniciar a API.
+Use os comandos abaixo apenas para criar novas migrations quando necessário.
+
 ```bash
 cd src/BSourceCore.API
 dotnet ef migrations add InitialCreate --project ../BSourceCore.Infrastructure
