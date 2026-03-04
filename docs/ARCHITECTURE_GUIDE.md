@@ -59,9 +59,69 @@ API → Application → Infrastructure (via abstrações)
 
 ---
 
-## 5. Responsabilidades das Camadas
+## 5. Padrão Result-Driven
 
-### 5.1 API
+5.1 Toda comunicação entre API e Application **DEVE** trafegar via `Result` ou `Result<T>` (definidos em Shared)
+5.2 Handlers **NUNCA** lançam exceções para erros de negócio — usam `Result.Fail`
+5.3 Tipos:
+  - `Result` — operações sem retorno de dados (Delete)
+  - `Result<T>` — operações que retornam um item (Create, Update, Get)
+  - `Result<CollectionResult<T>>` — operações que retornam coleções (List)
+
+---
+
+## 6. Tipos de Retorno por Operação
+
+| Operação | Handler retorna |
+|----------|-----------------|
+| Create   | `Result<TDto>`  |
+| Update   | `Result<TDto>`  |
+| Delete   | `Result`        |
+| Get      | `Result<TDto>`  |
+| List     | `Result<CollectionResult<TDto>>` |
+
+6.1 Para Create/Update, o handler **DEVE** re-consultar via `GetEntityByIdQuery` após persistir, garantindo retorno completo e consistente.
+6.2.3 Todas as respostas de sucesso (item único ou coleção) **DEVEM** ser encapsuladas em `CollectionResponse<TResponse>`
+6.2.4 Cada controller **DEVE** ter um método privado `ToDefaultResponse(TDto)` para mapear DTO → Response
+6.2.5 Para Create/Update: `CollectionResponse<TResponse>.From(ToDefaultResponse(result.Value!))`
+6.2.6 Para List: `CollectionResponse<TResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x)))`
+6.2.7 Para Delete: retornar `NoContent()` diretamente
+6.2.8 A API deve usar os contratos `CollectionResponse<T>` e `ErrorResponse` na camada Contracts/Responses
+6.2 Para Delete, o handler realiza soft delete (`BaseStatus.Deleted`) e retorna apenas `Result.Success().`
+
+---
+
+## 7. Nomenclatura de Ações
+
+7.1 Commands:
+  - `CreateEntityCommand` — criar 1 ou mais recursos
+  - `UpdateEntityCommand` — atualizar 1 ou mais recursos
+  - `DeleteEntityCommand` — excluir 1 ou mais recursos
+7.2 Queries:
+  - `GetEntityByIdQuery` — obter 1 recurso
+  - `ListEntitiesQuery` — obter 2 ou mais recursos
+
+---
+
+## 8. Tratamento de Erros
+
+8.1 Erros **DEVEM** ser representados por `Error(Code, Message, ErrorType, Details?)`
+8.2 O `ErrorType` **DEVE** ser escolhido pela semântica do erro: `Validation`, `NotFound`, `Conflict`, `Forbidden`, `Unauthorized`, `BusinessRule`, `BadRequest`, `Unexpected`
+8.3 A API converte `ErrorType` para HTTP status via `ResultExtensions.ToProblemDetails`:
+  - `Validation` / `BadRequest` → 400
+  - `NotFound` → 404
+  - `Conflict` → 409
+  - `Forbidden` → 403
+  - `Unauthorized` → 401
+  - `BusinessRule` → 422
+  - `Unexpected` → 500
+8.4 O pipeline MediatR executa validações FluentValidation e converte falhas em `Result.Fail` automaticamente.
+
+---
+
+## 9. Responsabilidades das Camadas
+
+### 9.1 API
 
 * Atua exclusivamente como **adaptador HTTP**
 * Expõe endpoints
@@ -69,7 +129,7 @@ API → Application → Infrastructure (via abstrações)
 * Mapeia Request → Command / Query
 * Mapeia Result → Response
 
-### 5.2 Application
+### 9.2 Application
 
 * Implementa casos de uso
 * Orquestra fluxos
@@ -77,19 +137,19 @@ API → Application → Infrastructure (via abstrações)
 * Contém DTOs internos
 * Contém Validators (FluentValidation)
 
-### 5.3 Domain
+### 9.3 Domain
 
 * Contém regras invariantes
 * Modela o negócio
 * Entidades e Value Objects
 
-### 5.4 Infrastructure
+### 9.4 Infrastructure
 
 * Persistência
 * Integrações externas
 * Serviços técnicos
 
-### 5.5 Shared
+### 9.5 Shared
 
 * Abstrações
 * Contratos
@@ -97,9 +157,9 @@ API → Application → Infrastructure (via abstrações)
 
 ---
 
-## 6. Contratos da Camada API
+## 10. Contratos da Camada API
 
-### 6.1 Princípio
+### 10.1 Princípio
 
 A camada API **NÃO expõe estruturas internas da aplicação**.
 
@@ -107,20 +167,20 @@ Ela atua apenas como adaptador entre HTTP e Application.
 
 ---
 
-### 6.2 Regras Obrigatórias
+### 10.2 Regras Obrigatórias
 
-6.2.1 A API **NÃO DEVE** utilizar DTOs da camada Application
+10.2.1 A API **NÃO DEVE** utilizar DTOs da camada Application
 
-6.2.2 A API **DEVE** trabalhar apenas com:
+10.2.2 A API **DEVE** trabalhar apenas com:
 
 * Request (entrada HTTP)
 * Response / Result (saída HTTP)
 
-6.2.3 DTOs pertencem **exclusivamente à camada Application**
+10.2.3 DTOs pertencem **exclusivamente à camada Application**
 
-6.2.4 Controllers **NÃO DEVEM** acessar Domain ou Infrastructure diretamente
+10.2.4 Controllers **NÃO DEVEM** acessar Domain ou Infrastructure diretamente
 
-6.2.5 Controllers **DEVEM** apenas:
+10.2.5 Controllers **DEVEM** apenas:
 
 * Receber Requests
 * Autorizar acesso
@@ -130,7 +190,7 @@ Ela atua apenas como adaptador entre HTTP e Application.
 
 ---
 
-### 6.3 Fluxo Arquitetural Oficial
+### 10.3 Fluxo Arquitetural Oficial
 
 ```
 HTTP Request
@@ -139,114 +199,92 @@ API Request
    ↓
 Command / Query
    ↓
-Application
+Application Handler
    ↓
-DTO (interno)
+Result<TDto> ou Result<CollectionResult<TDto>>
    ↓
-Map
+Controller verifica IsSuccess
    ↓
-API Response
+ToDefaultResponse(dto)
+   ↓
+CollectionResponse<TResponse>
+   ↓
+HTTP Response
+```
+
+Fluxo de erro:
+```
+Handler retorna Result.Fail(Error)
+   ↓
+Controller detecta IsFailure
+   ↓
+ToProblemDetails
+   ↓
+HTTP Error (4xx/5xx)
 ```
 
 ---
 
-## 7. Validações
+## 11. Validações
 
-7.1 Validações de entrada **DEVEM** ser feitas na Application
+11.1 Validações de entrada **DEVEM** ser feitas na Application
 
-7.2 O padrão obrigatório é **FluentValidation**
+11.2 O padrão obrigatório é **FluentValidation**
 
-7.3 Validators validam:
+11.3 Validators validam:
 
 * Formato
 * Consistência de dados
 * Regras de caso de uso
 
-7.4 O Domain contém apenas **invariantes essenciais**
+11.4 O Domain contém apenas **invariantes essenciais**
 
 ---
 
-## 8. Autenticação e Autorização
+## 12. Autenticação e Autorização
 
-8.1 Autenticação baseada em JWT
+12.1 Autenticação baseada em JWT
 
-8.2 Login é o único endpoint público
+12.2 Login é o único endpoint público
 
-8.3 Todos os demais endpoints **DEVEM** exigir token válido
+12.3 Todos os demais endpoints **DEVEM** exigir token válido
 
-8.4 Autorização baseada em **permissões**, nunca roles fixas
+12.4 Autorização baseada em **permissões**, nunca roles fixas
 
-8.5 Endpoints protegidos **DEVEM** declarar policies explicitamente
-
----
-
-## 9. Auditoria
-
-9.1 Todas as entidades persistidas **DEVEM** conter:
-
-```
-CreatedById   (Guid?)
-CreatedAt     (DateTimeOffset)
-UpdatedById   (Guid?)
-UpdatedAt     (DateTimeOffset)
-```
-
-9.2 Preenchimento automático via DbContext
+12.5 Endpoints protegidos **DEVEM** declarar policies explicitamente
 
 ---
 
-## 10. Status
+## 13. DbContext
 
-10.1 Todas as entidades persistidas **DEVEM** conter:
-
-- Uma chave única. Não criar entidades com chaves compostas
-- A chave deve seguir o padrão NomeDaEntidadeId
-
----
-
-## 11. Relação de Entidades
-
-11.1 Todas as entidades persistidas **DEVEM** conter:
-
-```
-Status   (BaseStatus) => BaseStatus.Active
-```
-
-- BaseStatus é um enum com os seguintes status: Active, Inactive, Pending, Deleted
-- O uso deste status elimina a necessidade de usar propriedades IsActive, IsDeleted etc.
-
----
-
-## 12. DbContext
-
-12.1 Deve existir:
+13.1 Deve existir:
 
 * Um DbContext de escrita
 * Um DbContext somente leitura
 
-12.2 Queries **DEVEM** utilizar o DbContext de leitura
+13.2 Queries **DEVEM** utilizar o DbContext de leitura
 
 ---
 
-## 13. Platform Core
+## 14. Platform Core
 
-13.1 Funcionalidades transversais obrigatórias:
+14.1 Funcionalidades transversais obrigatórias:
 
 * Autenticação
 * Usuários
 * Grupos
 * Permissões
 
-13.2 O Platform Core é definido em documentos próprios:
+14.2 O Platform Core é definido em documentos próprios:
 
 * PLATFORM_CORE_GUIDE.md
 * PLATFORM_CORE_STRUCTURE.md
 
-13.3 O Platform Core **NÃO depende** do domínio de negócio
+14.3 O Platform Core **NÃO depende** do domínio de negócio
 
 ---
 
-## 14. Decisões Arquiteturais Obrigatórias
+## 15. Decisões Arquiteturais Obrigatórias
 
 * API não usa DTO
 * Application usa FluentValidation
@@ -256,7 +294,7 @@ Status   (BaseStatus) => BaseStatus.Active
 
 ---
 
-## 15. Regra Final
+## 16. Regra Final
 
 Estas diretrizes são **contratos arquiteturais**.
 
