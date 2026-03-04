@@ -166,6 +166,8 @@ try
 
     var app = builder.Build();
 
+    app.Services.ApplyDatabaseMigrations(app.Configuration);
+
     // Configure the HTTP request pipeline.
     app.UseExceptionHandler();
 
@@ -195,8 +197,6 @@ try
 
     app.UseAuthentication();
     app.UseAuthorization();
-
-    app.Services.ApplyDatabaseMigrations(app.Configuration);
 
     app.MapControllers();
 

@@ -12,25 +12,25 @@ public static class DatabaseMigrationExtensions
     {
         if (!configuration.GetValue("Database:ApplyMigrations", true))
         {
-            var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+            var skipLogger = serviceProvider.GetRequiredService<ILoggerFactory>()
                 .CreateLogger("DatabaseMigration");
-            logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
+            skipLogger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
         }
 
         using var scope = serviceProvider.CreateScope();
-        var loggerScope = scope.ServiceProvider.GetRequiredService<ILogger<WriteDbContext>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<WriteDbContext>>();
         try
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
 
-            loggerScope.LogInformation("Applying database migrations");
+            logger.LogInformation("Applying database migrations");
             dbContext.Database.Migrate();
-            loggerScope.LogInformation("Database migrations applied");
+            logger.LogInformation("Database migrations applied");
         }
         catch (Exception ex)
         {
-            loggerScope.LogError(ex, "Database migration failed");
+            logger.LogError(ex, "Database migration failed");
             throw;
         }
     }
