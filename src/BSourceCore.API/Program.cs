@@ -200,22 +200,29 @@ try
 
     app.MapControllers();
 
-    using (var scope = app.Services.CreateScope())
+    if (app.Configuration.GetValue("Database:ApplyMigrations", true))
     {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        try
+        using (var scope = app.Services.CreateScope())
         {
-            var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            try
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
 
-            logger.LogInformation("Applying database migrations");
-            dbContext.Database.Migrate();
-            logger.LogInformation("Database migrations applied");
+                logger.LogInformation("Applying database migrations");
+                dbContext.Database.Migrate();
+                logger.LogInformation("Database migrations applied");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Database migration failed");
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Database migration failed");
-            throw;
-        }
+    }
+    else
+    {
+        app.Logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
     }
 
     app.Run();
