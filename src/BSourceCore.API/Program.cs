@@ -196,8 +196,9 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.Services.ApplyDatabaseMigrations(app.Configuration);
+
     app.MapControllers();
-    app.ApplyDatabaseMigrations();
 
     app.Run();
 }

@@ -1,5 +1,4 @@
 using BSourceCore.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,27 +8,29 @@ namespace BSourceCore.Infrastructure;
 
 public static class DatabaseMigrationExtensions
 {
-    public static void ApplyDatabaseMigrations(this WebApplication app)
+    public static void ApplyDatabaseMigrations(this IServiceProvider serviceProvider, IConfiguration configuration)
     {
-        if (!app.Configuration.GetValue("Database:ApplyMigrations", true))
+        if (!configuration.GetValue("Database:ApplyMigrations", true))
         {
-            app.Logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
+            var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+                .CreateLogger("DatabaseMigration");
+            logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
         }
 
-        using var scope = app.Services.CreateScope();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<WriteDbContext>>();
+        using var scope = serviceProvider.CreateScope();
+        var loggerScope = scope.ServiceProvider.GetRequiredService<ILogger<WriteDbContext>>();
         try
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
 
-            logger.LogInformation("Applying database migrations");
+            loggerScope.LogInformation("Applying database migrations");
             dbContext.Database.Migrate();
-            logger.LogInformation("Database migrations applied");
+            loggerScope.LogInformation("Database migrations applied");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Database migration failed");
+            loggerScope.LogError(ex, "Database migration failed");
             throw;
         }
     }
