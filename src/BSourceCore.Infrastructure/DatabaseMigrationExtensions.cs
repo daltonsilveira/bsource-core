@@ -13,6 +13,7 @@ public static class DatabaseMigrationExtensions
         var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
             .CreateLogger("DatabaseMigration");
         var applyMigrationsSetting = configuration.GetValue<bool?>("Database:ApplyMigrations");
+        var applyMigrations = applyMigrationsSetting ?? true;
 
         if (applyMigrationsSetting is null)
         {
@@ -21,7 +22,7 @@ public static class DatabaseMigrationExtensions
                 "Set Database:ApplyMigrations=false for multi-instance deployments.");
         }
 
-        if (applyMigrationsSetting == false)
+        if (!applyMigrations)
         {
             logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
