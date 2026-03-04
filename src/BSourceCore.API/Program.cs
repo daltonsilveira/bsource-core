@@ -5,6 +5,7 @@ using BSourceCore.API.Middleware;
 using BSourceCore.Application;
 using BSourceCore.Infrastructure;
 using BSourceCore.Infrastructure.Services;
+using BSourceCore.Shared.Abstractions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -166,7 +167,11 @@ try
 
     var app = builder.Build();
 
-    app.Services.ApplyDatabaseMigrations(app.Configuration);
+    using (var scope = app.Services.CreateScope())
+    {
+        var migrationService = scope.ServiceProvider.GetRequiredService<IDatabaseMigrationService>();
+        migrationService.ApplyMigrations();
+    }
 
     // Configure the HTTP request pipeline.
     app.UseExceptionHandler();
