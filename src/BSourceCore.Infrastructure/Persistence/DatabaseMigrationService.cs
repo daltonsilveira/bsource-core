@@ -24,20 +24,25 @@ public class DatabaseMigrationService : IDatabaseMigrationService
 
     public async Task ApplyMigrationsAsync(CancellationToken cancellationToken = default)
     {
-        var applyMigrationsSetting = _configuration.GetValue<bool?>("Database:ApplyMigrations");
+        var applyMigrationsSection = _configuration.GetSection("Database:ApplyMigrations");
+        var applyMigrations = _configuration.GetValue("Database:ApplyMigrations", false);
 
-        if (applyMigrationsSetting is null)
+        if (!applyMigrationsSection.Exists())
         {
             _logger.LogWarning(
                 "Database:ApplyMigrations not configured; defaulting to false. " +
                 "Set Database:ApplyMigrations=true to enable automatic migrations.");
         }
 
-        if (applyMigrationsSetting != true)
+        if (!applyMigrations)
         {
             _logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
         }
+
+        _logger.LogWarning(
+            "Automatic migrations are enabled; ensure only one instance performs migrations " +
+            "to avoid concurrent execution in multi-instance deployments.");
 
         try
         {
