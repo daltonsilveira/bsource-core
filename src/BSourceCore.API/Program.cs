@@ -170,7 +170,15 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var migrationService = scope.ServiceProvider.GetRequiredService<IDatabaseMigrationService>();
-        await migrationService.ApplyMigrationsAsync();
+        try
+        {
+            await migrationService.ApplyMigrationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Database migration failed during startup");
+            throw;
+        }
     }
 
     // Configure the HTTP request pipeline.

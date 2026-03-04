@@ -25,9 +25,7 @@ public class DatabaseMigrationService : IDatabaseMigrationService
     public async Task ApplyMigrationsAsync(CancellationToken cancellationToken = default)
     {
         var applyMigrationsSection = _configuration.GetSection("Database:ApplyMigrations");
-        var applyMigrationsSetting = bool.TryParse(applyMigrationsSection.Value, out var parsedValue)
-            ? parsedValue
-            : (bool?)null;
+        var applyMigrations = _configuration.GetValue("Database:ApplyMigrations", false);
 
         if (!applyMigrationsSection.Exists())
         {
@@ -36,7 +34,7 @@ public class DatabaseMigrationService : IDatabaseMigrationService
                 "Set Database:ApplyMigrations=true to enable automatic migrations.");
         }
 
-        if (applyMigrationsSetting != true)
+        if (!applyMigrations)
         {
             _logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
