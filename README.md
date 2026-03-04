@@ -54,7 +54,7 @@ CREATE DATABASE BSourceCore_dev;
 ### Executar Migrations
 
 As migrations existentes (incluindo SeedData) são aplicadas automaticamente ao iniciar a API.
-Para desativar em ambientes com múltiplas instâncias, defina `Database:ApplyMigrations=false`.
+Em ambientes com múltiplas instâncias, desative para evitar migrações concorrentes: defina `Database:ApplyMigrations=false`.
 Use os comandos abaixo apenas para criar novas migrations quando necessário.
 
 ```bash
