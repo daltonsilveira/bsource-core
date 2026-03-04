@@ -10,16 +10,24 @@ public static class DatabaseMigrationExtensions
 {
     public static void ApplyDatabaseMigrations(this IServiceProvider serviceProvider, IConfiguration configuration)
     {
-        if (!configuration.GetValue("Database:ApplyMigrations", true))
+        var logger = serviceProvider.GetRequiredService<ILoggerFactory>()
+            .CreateLogger("DatabaseMigration");
+        var applyMigrationsSetting = configuration.GetValue<bool?>("Database:ApplyMigrations");
+
+        if (applyMigrationsSetting is null)
         {
-            var skipLogger = serviceProvider.GetRequiredService<ILoggerFactory>()
-                .CreateLogger("DatabaseMigration");
-            skipLogger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
+            logger.LogWarning(
+                "Database:ApplyMigrations not configured; defaulting to true. " +
+                "Set Database:ApplyMigrations=false for multi-instance deployments.");
+        }
+
+        if (applyMigrationsSetting == false)
+        {
+            logger.LogInformation("Database migrations are disabled (Database:ApplyMigrations=false)");
             return;
         }
 
         using var scope = serviceProvider.CreateScope();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<WriteDbContext>>();
         try
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
@@ -30,7 +38,10 @@ public static class DatabaseMigrationExtensions
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Database migration failed");
+            logger.LogError(
+                ex,
+                "Database migration failed. Verify the connection string, database permissions, " +
+                "and pending migrations, or disable auto-migrations with Database:ApplyMigrations=false.");
             throw;
         }
     }
