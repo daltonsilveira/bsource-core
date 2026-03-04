@@ -1,6 +1,8 @@
+using System.Threading;
+
 namespace BSourceCore.Shared.Abstractions;
 
 public interface IDatabaseMigrationService
 {
-    void ApplyMigrations();
+    Task ApplyMigrationsAsync(CancellationToken cancellationToken = default);
 }

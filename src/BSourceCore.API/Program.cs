@@ -170,7 +170,7 @@ try
     using (var scope = app.Services.CreateScope())
     {
         var migrationService = scope.ServiceProvider.GetRequiredService<IDatabaseMigrationService>();
-        migrationService.ApplyMigrations();
+        await migrationService.ApplyMigrationsAsync();
     }
 
     // Configure the HTTP request pipeline.
@@ -205,7 +205,7 @@ try
 
     app.MapControllers();
 
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {

@@ -1,3 +1,4 @@
+using System.Threading;
 using BSourceCore.Shared.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -21,7 +22,7 @@ public class DatabaseMigrationService : IDatabaseMigrationService
         _logger = logger;
     }
 
-    public void ApplyMigrations()
+    public async Task ApplyMigrationsAsync(CancellationToken cancellationToken = default)
     {
         var applyMigrationsSetting = _configuration.GetValue<bool?>("Database:ApplyMigrations");
 
@@ -41,7 +42,7 @@ public class DatabaseMigrationService : IDatabaseMigrationService
         try
         {
             _logger.LogInformation("Applying database migrations");
-            _dbContext.Database.Migrate();
+            await _dbContext.Database.MigrateAsync(cancellationToken);
             _logger.LogInformation("Database migrations applied");
         }
         catch (Exception ex)
