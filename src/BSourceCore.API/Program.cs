@@ -176,7 +176,7 @@ try
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Database migration failed during startup");
+            Log.Fatal(ex, "Application startup failed due to migration error");
             throw;
         }
     }
