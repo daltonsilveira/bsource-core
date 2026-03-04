@@ -168,16 +168,6 @@ try
 
     var app = builder.Build();
 
-    using (var scope = app.Services.CreateScope())
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
-
-        logger.LogInformation("Applying database migrations");
-        dbContext.Database.Migrate();
-        logger.LogInformation("Database migrations applied");
-    }
-
     // Configure the HTTP request pipeline.
     app.UseExceptionHandler();
 
@@ -209,6 +199,24 @@ try
     app.UseAuthorization();
 
     app.MapControllers();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        try
+        {
+            var dbContext = scope.ServiceProvider.GetRequiredService<WriteDbContext>();
+
+            logger.LogInformation("Applying database migrations");
+            dbContext.Database.Migrate();
+            logger.LogInformation("Database migrations applied");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Database migration failed");
+            throw;
+        }
+    }
 
     app.Run();
 }
