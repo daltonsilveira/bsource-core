@@ -1,12 +1,13 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Groups.Commands.RemoveUserFromGroup;
 
-public class RemoveUserFromGroupCommandHandler : IRequestHandler<RemoveUserFromGroupCommand, bool>
+public class RemoveUserFromGroupCommandHandler : IRequestHandler<RemoveUserFromGroupCommand, Result>
 {
     private readonly IUserGroupRepository _userGroupRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -25,20 +26,26 @@ public class RemoveUserFromGroupCommandHandler : IRequestHandler<RemoveUserFromG
         _logger = logger;
     }
 
-    public async Task<bool> Handle(
+    public async Task<Result> Handle(
         RemoveUserFromGroupCommand request,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Removing user {UserId} from group {GroupId}", request.UserId, request.GroupId);
 
-        var userGroup = await _userGroupRepository.GetAsync(request.UserId, request.GroupId, cancellationToken)
-            ?? throw new KeyNotFoundException($"User is not a member of this group");
+        var userGroup = await _userGroupRepository.GetAsync(request.UserId, request.GroupId, cancellationToken);
+        if (userGroup is null)
+        {
+            return Result.Fail(new Error(
+                "Group.UserNotMember",
+                "User is not a member of this group",
+                ErrorType.NotFound));
+        }
 
         _userGroupRepository.Delete(userGroup);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("User {UserId} removed from group {GroupId}", request.UserId, request.GroupId);
 
-        return true;
+        return Result.Success();
     }
 }

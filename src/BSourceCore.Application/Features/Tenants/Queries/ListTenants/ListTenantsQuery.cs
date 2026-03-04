@@ -3,4 +3,4 @@ using MediatR;
 
 namespace BSourceCore.Application.Features.Tenants.Queries.GetTenants;
 
-public record GetTenantsQuery : IRequest<IEnumerable<TenantDto>>;
+public record ListTenantsQuery : IRequest<IEnumerable<TenantDto>>;

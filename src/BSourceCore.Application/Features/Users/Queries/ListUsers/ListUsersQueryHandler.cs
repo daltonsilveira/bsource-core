@@ -41,13 +41,11 @@ public class ListUsersQueryHandler : IRequestHandler<ListUsersQuery, Result<Coll
             u.CreatedAt,
             u.CreatedBy != null ? new UserAuditDto(
                 u.CreatedBy.UserId,
-                u.CreatedBy.Name,
-                u.CreatedBy.Email) : null,
+                u.CreatedBy.Name) : null,
             u.UpdatedAt,
             u.UpdatedBy != null ? new UserAuditDto(
                 u.UpdatedBy.UserId,
-                u.UpdatedBy.Name,
-                u.UpdatedBy.Email) : null)).ToList();
+                u.UpdatedBy.Name) : null)).ToList();
 
         return Result<CollectionResult<UserDto>>.Success(CollectionResult<UserDto>.From(items));
     }

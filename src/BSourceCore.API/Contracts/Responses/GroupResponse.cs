@@ -6,4 +6,7 @@ public record GroupResponse(
     string Name,
     string? Description,
     string Status,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    UserAuditResponse? CreatedBy = null,
+    DateTimeOffset? UpdatedAt = null,
+    UserAuditResponse? UpdatedBy = null);

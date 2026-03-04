@@ -1,3 +1,4 @@
+using BSourceCore.Application.Features.Groups.DTOs;
 using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 
@@ -7,4 +8,4 @@ public record CreateGroupCommand(
     Guid TenantId,
     string Name,
     string? Description
-) : IRequest<Result<CreateGroupResult>>;
+) : IRequest<Result<GroupDto>>;

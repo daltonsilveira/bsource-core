@@ -1,12 +1,13 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Abstractions.Services;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.PasswordResets.Commands.ConfirmPasswordReset;
 
-public class ConfirmPasswordResetCommandHandler : IRequestHandler<ConfirmPasswordResetCommand, ConfirmPasswordResetResult>
+public class ConfirmPasswordResetCommandHandler : IRequestHandler<ConfirmPasswordResetCommand, Result>
 {
     private readonly IPasswordResetRepository _passwordResetRepository;
     private readonly IUserRepository _userRepository;
@@ -28,7 +29,7 @@ public class ConfirmPasswordResetCommandHandler : IRequestHandler<ConfirmPasswor
         _logger = logger;
     }
 
-    public async Task<ConfirmPasswordResetResult> Handle(
+    public async Task<Result> Handle(
         ConfirmPasswordResetCommand request,
         CancellationToken cancellationToken)
     {
@@ -39,20 +40,30 @@ public class ConfirmPasswordResetCommandHandler : IRequestHandler<ConfirmPasswor
         if (passwordReset is null)
         {
             _logger.LogWarning("Password reset token not found");
-            throw new InvalidOperationException("Invalid or expired token");
+            return Result.Fail(new Error(
+                "PasswordReset.TokenNotFound",
+                "Password reset token not found",
+                ErrorType.NotFound));
         }
 
         if (!passwordReset.IsValid())
         {
             _logger.LogWarning("Password reset token is invalid or expired for user {UserId}", passwordReset.UserId);
-            throw new InvalidOperationException("Invalid or expired token");
+            return Result.Fail(new Error(
+                "PasswordReset.TokenInvalid",
+                "Password reset token is invalid or expired",
+                ErrorType.BadRequest));
         }
 
         var user = await _userRepository.GetByIdAsync(passwordReset.UserId, cancellationToken);
         if (user is null)
         {
             _logger.LogWarning("User not found for password reset {PasswordResetId}", passwordReset.PasswordResetId);
-            throw new InvalidOperationException("User not found");
+            return Result.Fail(new Error(
+                "User.NotFound",
+                "User not found",
+                ErrorType.NotFound 
+            ));  
         }
 
         // Hash the new password and complete first access
@@ -70,6 +81,6 @@ public class ConfirmPasswordResetCommandHandler : IRequestHandler<ConfirmPasswor
             "Password reset completed successfully for user {UserId}",
             user.UserId);
 
-        return new ConfirmPasswordResetResult(true);
+        return Result.Success();
     }
 }

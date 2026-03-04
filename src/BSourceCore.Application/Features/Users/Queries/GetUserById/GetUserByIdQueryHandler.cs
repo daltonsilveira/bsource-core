@@ -50,12 +50,10 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, Result<
             user.CreatedAt,
             user.CreatedBy != null ? new UserAuditDto(
                 user.CreatedBy.UserId,
-                user.CreatedBy.Name,
-                user.CreatedBy.Email) : null,
+                user.CreatedBy.Name) : null,
             user.UpdatedAt,
             user.UpdatedBy != null ? new UserAuditDto(
                 user.UpdatedBy.UserId,
-                user.UpdatedBy.Name,
-                user.UpdatedBy.Email) : null));
+                user.UpdatedBy.Name) : null));
     }
 }

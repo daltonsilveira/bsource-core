@@ -7,5 +7,6 @@ public enum ErrorType
     Forbidden,
     Unauthorized,
     BusinessRule,
+    BadRequest,
     Unexpected
 }

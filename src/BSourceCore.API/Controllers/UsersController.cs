@@ -186,17 +186,15 @@ public class UsersController : ControllerBase
             dto.UserId, 
             dto.Name, 
             dto.Email, 
-            dto.Status, 
+            dto.Status.ToString(), 
             dto.CreatedAt,
             dto.CreatedBy != null ? new UserAuditResponse(
                 dto.CreatedBy.UserId,
-                dto.CreatedBy.Name,
-                dto.CreatedBy.Email) : null,
+                dto.CreatedBy.Name) : null,
             dto.UpdatedAt,
             dto.UpdatedBy != null ? new UserAuditResponse(
                 dto.UpdatedBy.UserId,
-                dto.UpdatedBy.Name,
-                dto.UpdatedBy.Email) : null
+                dto.UpdatedBy.Name) : null
             );
     }
 }

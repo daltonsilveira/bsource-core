@@ -6,10 +6,10 @@ public record UserResponse(
     Guid UserId,
     string Name,
     string Email,
-    BaseStatus Status,
+    string Status,
     DateTimeOffset CreatedAt,
-    UserAuditResponse? CreatedBy,
-    DateTimeOffset? UpdatedAt,
-    UserAuditResponse? UpdatedBy);
+    UserAuditResponse? CreatedBy = null,
+    DateTimeOffset? UpdatedAt = null,
+    UserAuditResponse? UpdatedBy = null);
 
 

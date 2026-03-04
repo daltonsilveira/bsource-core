@@ -40,6 +40,7 @@ public static class ResultExtensions
 
         return firstType switch
         {
+            ErrorType.BadRequest => controller.BadRequest(problems),
             ErrorType.NotFound => controller.NotFound(problems),
             ErrorType.Conflict => controller.Conflict(problems),
             ErrorType.Forbidden => controller.StatusCode(403, problems),

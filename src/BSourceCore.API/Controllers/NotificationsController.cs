@@ -37,7 +37,7 @@ public class NotificationsController : ControllerBase
     {
         _logger.LogInformation("Listing notifications for authenticated user");
 
-        var query = new GetNotificationsQuery();
+        var query = new ListNotificationsQuery();
         var result = await _mediator.Send(query);
 
         if (!result.IsSuccess)

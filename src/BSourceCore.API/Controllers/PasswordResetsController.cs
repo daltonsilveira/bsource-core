@@ -2,6 +2,7 @@ using Asp.Versioning;
 using BSourceCore.API.Contracts.Requests.PasswordResets;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.PasswordResets.Commands.ConfirmPasswordReset;
+using BSourceCore.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,25 +30,19 @@ public class PasswordResetsController : ControllerBase
     [HttpPatch("confirm")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Confirm([FromBody] ConfirmPasswordResetRequest request)
     {
         _logger.LogInformation("Password reset confirmation attempt");
 
         var command = new ConfirmPasswordResetCommand(request.Token, request.Password);
 
-        try
-        {
-            await _mediator.Send(command);
+        var result = await _mediator.Send(command);
 
-            _logger.LogInformation("Password reset confirmed successfully");
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-            return NoContent();
-        }
-        catch (InvalidOperationException ex)
-        {
-            _logger.LogWarning("Password reset confirmation failed: {Message}", ex.Message);
-            return BadRequest(ApiErrorResponse.BadRequest(ex.Message));
-        }
+        _logger.LogInformation("Password reset confirmed successfully");
+
+        return NoContent();
     }
 }

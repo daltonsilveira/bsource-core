@@ -9,8 +9,9 @@ using BSourceCore.Application.Features.Groups.Commands.DeleteGroup;
 using BSourceCore.Application.Features.Groups.Commands.RemovePermissionFromGroup;
 using BSourceCore.Application.Features.Groups.Commands.RemoveUserFromGroup;
 using BSourceCore.Application.Features.Groups.Commands.UpdateGroup;
+using BSourceCore.Application.Features.Groups.DTOs;
 using BSourceCore.Application.Features.Groups.Queries.GetGroupById;
-using BSourceCore.Application.Features.Groups.Queries.GetGroups;
+using BSourceCore.Application.Features.Groups.Queries.ListGroups;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -37,98 +38,77 @@ public class GroupsController : ControllerBase
     /// Creates a new group
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.create")]
     public async Task<IActionResult> Create([FromBody] CreateGroupRequest request)
     {
         _logger.LogInformation("Creating group with name: {Name}", request.Name);
 
-        var command = new CreateGroupCommand(
+        var result = await _mediator.Send(new CreateGroupCommand(
             request.TenantId,
             request.Name,
-            request.Description);
+            request.Description));
 
-        var result = await _mediator.Send(command);
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return result.ToCreatedResult(
-            this,
-            nameof(GetById),
-            r => new { groupId = r.GroupId },
-            r => ApiResponse<GroupResponse>.From(new GroupResponse(
-                r.GroupId, request.TenantId, r.Name, request.Description, "Active", DateTimeOffset.UtcNow)));
+        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
     /// Gets a group by ID
     /// </summary>
     [HttpGet("{groupId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetById(Guid groupId)
     {
         _logger.LogInformation("Getting group by Id: {GroupId}", groupId);
 
-        var query = new GetGroupByIdQuery(groupId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetGroupByIdQuery(groupId));
 
-        if (result is null)
-        {
-            return NotFound(ApiErrorResponse.NotFound($"Group with Id '{groupId}' not found"));
-        }
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        var response = new GroupResponse(
-            result.GroupId,
-            result.TenantId,
-            result.Name,
-            result.Description,
-            result.Status,
-            result.CreatedAt);
-
-        return Ok(ApiResponse<GroupResponse>.From(response));
+        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
-    /// Gets all groups by tenant
+    /// List groups by tenant
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "groups.read")]
-    public async Task<IActionResult> GetAll([FromQuery] Guid tenantId)
+    public async Task<IActionResult> List([FromQuery] Guid tenantId)
     {
-        _logger.LogInformation("Getting all groups for tenant: {TenantId}", tenantId);
+        _logger.LogInformation("Listing all groups for tenant: {TenantId}", tenantId);
 
-        var query = new GetGroupsQuery(tenantId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new ListGroupsQuery(tenantId));
 
-        return result.ToCollectionResult(g => new GroupResponse(
-            g.GroupId, g.TenantId, g.Name, g.Description, g.Status, g.CreatedAt));
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
+
+        return Ok(CollectionResponse<GroupResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x))));
     }
 
     /// <summary>
     /// Updates a group
     /// </summary>
     [HttpPut("{groupId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<GroupResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> Update(Guid groupId, [FromBody] UpdateGroupRequest request)
     {
         _logger.LogInformation("Updating group: {GroupId}", groupId);
 
-        var command = new UpdateGroupCommand(groupId, request.Name, request.Description);
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(new UpdateGroupCommand(
+            groupId, 
+            request.Name, 
+            request.Description));
 
-        var response = new GroupResponse(
-            result.GroupId,
-            Guid.Empty,
-            result.Name,
-            request.Description,
-            "Active",
-            DateTimeOffset.UtcNow);
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return Ok(ApiResponse<GroupResponse>.From(response));
+        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
@@ -136,14 +116,15 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpDelete("{groupId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.delete")]
     public async Task<IActionResult> Delete(Guid groupId)
     {
         _logger.LogInformation("Deleting group: {GroupId}", groupId);
 
-        var command = new DeleteGroupCommand(groupId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(new DeleteGroupCommand(groupId));
+
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
         return NoContent();
     }
@@ -153,14 +134,15 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpPost("{groupId:guid}/users")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddUser(Guid groupId, [FromBody] AddUserToGroupRequest request)
     {
         _logger.LogInformation("Adding user {UserId} to group {GroupId}", request.UserId, groupId);
 
-        var command = new AddUserToGroupCommand(groupId, request.UserId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(new AddUserToGroupCommand(groupId, request.UserId));
+
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
         return NoContent();
     }
@@ -170,14 +152,15 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpDelete("{groupId:guid}/users/{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemoveUser(Guid groupId, Guid userId)
     {
         _logger.LogInformation("Removing user {UserId} from group {GroupId}", userId, groupId);
 
-        var command = new RemoveUserFromGroupCommand(groupId, userId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(new RemoveUserFromGroupCommand(groupId, userId));
+
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
         return NoContent();
     }
@@ -187,14 +170,15 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpPost("{groupId:guid}/permissions")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddPermission(Guid groupId, [FromBody] AddPermissionToGroupRequest request)
     {
         _logger.LogInformation("Adding permission {PermissionId} to group {GroupId}", request.PermissionId, groupId);
 
-        var command = new AddPermissionToGroupCommand(groupId, request.PermissionId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(new AddPermissionToGroupCommand(groupId, request.PermissionId));
+
+        if (!result.IsSuccess)  return result.ToProblemDetails(this);
 
         return NoContent();
     }
@@ -204,15 +188,34 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpDelete("{groupId:guid}/permissions/{permissionId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemovePermission(Guid groupId, Guid permissionId)
     {
         _logger.LogInformation("Removing permission {PermissionId} from group {GroupId}", permissionId, groupId);
 
-        var command = new RemovePermissionFromGroupCommand(groupId, permissionId);
-        await _mediator.Send(command);
+        var result = await _mediator.Send(new RemovePermissionFromGroupCommand(groupId, permissionId));
+
+        if (!result.IsSuccess)  return result.ToProblemDetails(this);
 
         return NoContent();
+    }
+
+    private static GroupResponse ToDefaultResponse(GroupDto dto)
+    {
+        return new GroupResponse(
+            dto.GroupId,
+            dto.TenantId,
+            dto.Name,
+            dto.Description,
+            dto.Status.ToString(),
+            dto.CreatedAt,
+            dto.CreatedBy != null ? new UserAuditResponse(
+                dto.CreatedBy.UserId,
+                dto.CreatedBy.Name) : null,
+            dto.UpdatedAt,
+            dto.UpdatedBy != null ? new UserAuditResponse(
+                dto.UpdatedBy.UserId,
+                dto.UpdatedBy.Name) : null);
     }
 }

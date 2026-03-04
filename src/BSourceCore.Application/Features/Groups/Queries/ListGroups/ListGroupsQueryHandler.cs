@@ -1,23 +1,24 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Groups.DTOs;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
 using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
-namespace BSourceCore.Application.Features.Groups.Queries.GetGroups;
+namespace BSourceCore.Application.Features.Groups.Queries.ListGroups;
 
-public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, Result<CollectionResult<GroupDto>>>
+public class ListGroupsQueryHandler : IRequestHandler<ListGroupsQuery, Result<CollectionResult<GroupDto>>>
 {
     private readonly IGroupRepository _groupRepository;
     private readonly IUserContext _userContext;
-    private readonly ILogger<GetGroupsQueryHandler> _logger;
+    private readonly ILogger<ListGroupsQueryHandler> _logger;
 
-    public GetGroupsQueryHandler(
+    public ListGroupsQueryHandler(
         IGroupRepository groupRepository,
         IUserContext userContext,
-        ILogger<GetGroupsQueryHandler> logger)
+        ILogger<ListGroupsQueryHandler> logger)
     {
         _groupRepository = groupRepository;
         _userContext = userContext;
@@ -25,7 +26,7 @@ public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, Result<Coll
     }
 
     public async Task<Result<CollectionResult<GroupDto>>> Handle(
-        GetGroupsQuery request,
+        ListGroupsQuery request,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting groups for tenant: {TenantId}", request.TenantId);
@@ -37,13 +38,12 @@ public class GetGroupsQueryHandler : IRequestHandler<GetGroupsQuery, Result<Coll
             g.TenantId,
             g.Name,
             g.Description,
-            g.Status.ToString(),
-            g.CreatedAt)).ToList();
+            g.Status,
+            g.CreatedAt,
+            g.CreatedBy != null ? new UserAuditDto(g.CreatedBy.UserId, g.CreatedBy.Name) : null,
+            g.UpdatedAt,
+            g.UpdatedBy != null ? new UserAuditDto(g.UpdatedBy.UserId, g.UpdatedBy.Name) : null)).ToList();
 
-        return Result<CollectionResult<GroupDto>>.Success(new CollectionResult<GroupDto>
-        {
-            Results = items,
-            Total = items.Count
-        });
+        return Result<CollectionResult<GroupDto>>.Success(CollectionResult<GroupDto>.From(items));
     }
 }

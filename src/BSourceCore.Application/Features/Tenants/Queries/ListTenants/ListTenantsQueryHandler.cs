@@ -1,22 +1,23 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Tenants.DTOs;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Tenants.Queries.GetTenants;
 
-public class GetTenantsQueryHandler : IRequestHandler<GetTenantsQuery, IEnumerable<TenantDto>>
+public class ListTenantsQueryHandler : IRequestHandler<ListTenantsQuery, IEnumerable<TenantDto>>
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IUserContext _userContext;
-    private readonly ILogger<GetTenantsQueryHandler> _logger;
+    private readonly ILogger<ListTenantsQueryHandler> _logger;
 
-    public GetTenantsQueryHandler(
+    public ListTenantsQueryHandler(
         ITenantRepository tenantRepository,
         IUserContext userContext,
-        ILogger<GetTenantsQueryHandler> logger)
+        ILogger<ListTenantsQueryHandler> logger)
     {
         _tenantRepository = tenantRepository;
         _userContext = userContext;
@@ -24,7 +25,7 @@ public class GetTenantsQueryHandler : IRequestHandler<GetTenantsQuery, IEnumerab
     }
 
     public async Task<IEnumerable<TenantDto>> Handle(
-        GetTenantsQuery request,
+        ListTenantsQuery request,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation("Getting all tenants");
@@ -36,7 +37,10 @@ public class GetTenantsQueryHandler : IRequestHandler<GetTenantsQuery, IEnumerab
             t.Name,
             t.Slug,
             t.Description,
-            t.Status.ToString(),
-            t.CreatedAt));
+            t.Status,
+            t.CreatedAt,
+            t.CreatedBy != null ? new UserAuditDto(t.CreatedBy.UserId, t.CreatedBy.Name) : null,
+            t.UpdatedAt,
+            t.UpdatedBy != null ? new UserAuditDto(t.UpdatedBy.UserId, t.UpdatedBy.Name) : null));
     }
 }

@@ -2,11 +2,12 @@ using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Domain.Entities;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 
 namespace BSourceCore.Application.Features.Groups.Commands.AddPermissionToGroup;
 
-public class AddPermissionToGroupCommandHandler : IRequestHandler<AddPermissionToGroupCommand, Unit>
+public class AddPermissionToGroupCommandHandler : IRequestHandler<AddPermissionToGroupCommand, Result>
 {
     private readonly IGroupRepository _groupRepository;
     private readonly IGroupPermissionRepository _groupPermissionRepository;
@@ -25,12 +26,15 @@ public class AddPermissionToGroupCommandHandler : IRequestHandler<AddPermissionT
         _userContext = userContext;
     }
 
-    public async Task<Unit> Handle(AddPermissionToGroupCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(AddPermissionToGroupCommand request, CancellationToken cancellationToken)
     {
         var group = await _groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
         if (group is null)
         {
-            throw new KeyNotFoundException($"Group with Id '{request.GroupId}' not found");
+            return Result.Fail(new Error(
+                "Group.NotFound",
+                $"Group with Id '{request.GroupId}' not found",
+                ErrorType.NotFound));
         }
 
         var existingAssignment = await _groupPermissionRepository.GetAsync(
@@ -40,15 +44,17 @@ public class AddPermissionToGroupCommandHandler : IRequestHandler<AddPermissionT
 
         if (existingAssignment is not null)
         {
-            throw new InvalidOperationException("Permission is already assigned to this group");
+            return Result.Fail(new Error(
+                "Group.PermissionAlreadyAssigned",
+                "Permission is already assigned to this group",
+                ErrorType.Conflict));
         }
 
         var groupPermission = new GroupPermission(request.GroupId, request.PermissionId);
 
         await _groupPermissionRepository.AddAsync(groupPermission, cancellationToken);
-
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return Result.Success();
     }
 }

@@ -4,9 +4,12 @@ using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Tenants.Commands.CreateTenant;
 using BSourceCore.Application.Features.Tenants.Queries.GetTenantById;
 using BSourceCore.Application.Features.Tenants.Queries.GetTenants;
+using BSourceCore.Shared.Kernel.Results;
+using BSourceCore.API.Extensions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BSourceCore.Application.Features.Tenants.DTOs;
 
 namespace BSourceCore.API.Controllers;
 
@@ -30,85 +33,74 @@ public class TenantsController : ControllerBase
     /// Creates a new tenant
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = "tenants.create")]
     public async Task<IActionResult> Create([FromBody] CreateTenantRequest request)
     {
         _logger.LogInformation("Creating tenant with name: {Name}", request.Name);
 
-        var command = new CreateTenantCommand(
+        var result = await _mediator.Send(new CreateTenantCommand(
             request.Name,
             request.Slug,
-            request.Description);
+            request.Description));
 
-        var result = await _mediator.Send(command);
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        var response = new TenantResponse(
-            result.TenantId,
-            result.Name,
-            result.Slug,
-            request.Description,
-            "Active",
-            DateTimeOffset.UtcNow);
-
-        return CreatedAtAction(
-            nameof(GetById),
-            new { tenantId = result.TenantId },
-            ApiResponse<TenantResponse>.From(response));
+        return Ok(CollectionResult<TenantResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
     /// Gets a tenant by ID
     /// </summary>
     [HttpGet("{tenantId:guid}")]
-    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
     [Authorize(Policy = "tenants.read")]
     public async Task<IActionResult> GetById(Guid tenantId)
     {
         _logger.LogInformation("Getting tenant by Id: {TenantId}", tenantId);
 
-        var query = new GetTenantByIdQuery(tenantId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetTenantByIdQuery(tenantId));
 
-        if (result is null)
-        {
-            return NotFound(ApiErrorResponse.NotFound($"Tenant with Id '{tenantId}' not found"));
-        }
+        if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        var response = new TenantResponse(
-            result.TenantId,
-            result.Name,
-            result.Slug,
-            result.Description,
-            result.Status,
-            result.CreatedAt);
-
-        return Ok(ApiResponse<TenantResponse>.From(response));
+        return Ok(CollectionResponse<TenantResponse>.From(ToDefaultResponse(result.Value!)));
     }
 
     /// <summary>
     /// Gets all tenants
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<TenantResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status200OK)]
     [Authorize(Policy = "tenants.read")]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> List()
     {
-        _logger.LogInformation("Getting all tenants");
+        _logger.LogInformation("Listing all tenants");
 
-        var query = new GetTenantsQuery();
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new ListTenantsQuery());
 
-        var response = result.Select(t => new TenantResponse(
-            t.TenantId,
-            t.Name,
-            t.Slug,
-            t.Description,
-            t.Status,
-            t.CreatedAt));
+        var response = result.Select(t => ToDefaultResponse(t));
 
-        return Ok(ApiResponse<TenantResponse>.From(response));
+        return Ok(CollectionResponse<TenantResponse>.From(response));
+    }
+
+    private TenantResponse ToDefaultResponse(TenantDto dto)
+    {
+        return new TenantResponse(
+            dto.TenantId, 
+            dto.Name,
+            dto.Slug,
+            dto.Description,
+            dto.Status.ToString(), 
+            dto.CreatedAt,
+            dto.CreatedBy != null ? new UserAuditResponse(
+                dto.CreatedBy.UserId,
+                dto.CreatedBy.Name) : null,
+            dto.UpdatedAt,
+            dto.UpdatedBy != null ? new UserAuditResponse(
+                dto.UpdatedBy.UserId,
+                dto.UpdatedBy.Name) : null
+            );
     }
 }

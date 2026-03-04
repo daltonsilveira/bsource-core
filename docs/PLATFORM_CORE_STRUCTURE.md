@@ -201,8 +201,8 @@ O campo `Status` **DEVE** ser declarado individualmente em cada entidade que o n
       │    │    ├── GetTenantByIdQuery.cs
       │    │    └── GetTenantByIdQueryHandler.cs
       │    └── GetTenants
-      │         ├── GetTenantsQuery.cs
-      │         └── GetTenantsQueryHandler.cs
+      │         ├── ListTenantsQuery.cs
+      │         └── ListTenantsQueryHandler.cs
       └── /DTOs
            └── TenantDto.cs
 

@@ -4,4 +4,4 @@ using MediatR;
 
 namespace BSourceCore.Application.Features.Notifications.Queries.GetNotifications;
 
-public record GetNotificationsQuery() : IRequest<Result<CollectionResult<NotificationDto>>>;
+public record ListNotificationsQuery() : IRequest<Result<CollectionResult<NotificationDto>>>;

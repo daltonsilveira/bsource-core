@@ -1,3 +1,4 @@
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 
 namespace BSourceCore.Application.Features.PasswordResets.Commands.ConfirmPasswordReset;
@@ -5,4 +6,4 @@ namespace BSourceCore.Application.Features.PasswordResets.Commands.ConfirmPasswo
 public record ConfirmPasswordResetCommand(
     string Token,
     string Password
-) : IRequest<ConfirmPasswordResetResult>;
+) : IRequest<Result>;

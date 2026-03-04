@@ -1,6 +1,7 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.DTOs;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
 using BSourceCore.Shared.Kernel.Results;
 using MediatR;
@@ -48,6 +49,7 @@ public class GetNotificationByIdQueryHandler : IRequestHandler<GetNotificationBy
             notification.Data,
             notification.Recipients.Any(r => r.UserId == _userContext.UserId && r.WasRead),
             notification.CreatedAt,
+            notification.CreatedBy != null ? new UserAuditDto(notification.CreatedBy.UserId, notification.CreatedBy.Name) : null,
             notification.Recipients.Where(r => r.UserId == _userContext.UserId).Select(r => r.NotificationRecipientId).FirstOrDefault())
             );
     }

@@ -1,13 +1,15 @@
 using BSourceCore.Application.Abstractions;
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Tenants.DTOs;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
+using BSourceCore.Shared.Kernel.Results;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace BSourceCore.Application.Features.Tenants.Queries.GetTenantById;
 
-public class GetTenantByIdQueryHandler : IRequestHandler<GetTenantByIdQuery, TenantDto?>
+public class GetTenantByIdQueryHandler : IRequestHandler<GetTenantByIdQuery, Result<TenantDto>>
 {
     private readonly ITenantRepository _tenantRepository;
     private readonly IUserContext _userContext;
@@ -23,7 +25,7 @@ public class GetTenantByIdQueryHandler : IRequestHandler<GetTenantByIdQuery, Ten
         _logger = logger;
     }
 
-    public async Task<TenantDto?> Handle(
+    public async Task<Result<TenantDto>> Handle(
         GetTenantByIdQuery request,
         CancellationToken cancellationToken)
     {
@@ -34,15 +36,22 @@ public class GetTenantByIdQueryHandler : IRequestHandler<GetTenantByIdQuery, Ten
         if (tenant is null)
         {
             _logger.LogWarning("Tenant not found with Id: {TenantId}", request.TenantId);
-            return null;
+            return Result<TenantDto>.Fail(new Error(
+                "Tenant.NotFound",
+                $"Tenant with Id '{request.TenantId}' not found",
+                ErrorType.NotFound));
         }
 
-        return new TenantDto(
+        return Result<TenantDto>.Success(new TenantDto(
             tenant.TenantId,
             tenant.Name,
             tenant.Slug,
             tenant.Description,
-            tenant.Status.ToString(),
-            tenant.CreatedAt);
+            tenant.Status,
+            tenant.CreatedAt,
+            tenant.CreatedBy != null ? new UserAuditDto(tenant.CreatedBy.UserId, tenant.CreatedBy.Name) : null,
+            tenant.UpdatedAt,
+            tenant.UpdatedBy != null ? new UserAuditDto(tenant.UpdatedBy.UserId, tenant.UpdatedBy.Name) : null
+            ));
     }
 }

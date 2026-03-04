@@ -1,3 +1,5 @@
+using BSourceCore.Application.Features.Users.DTOs;
+
 namespace BSourceCore.Application.Features.Notifications.DTOs;
 
 public record NotificationDto(
@@ -7,4 +9,5 @@ public record NotificationDto(
     string Data,
     bool WasRead,
     DateTimeOffset CreatedAt,
-    Guid? NotificationRecipientId);
+    UserAuditDto? CreatedBy = null,
+    Guid? NotificationRecipientId = null);

@@ -1,4 +1,5 @@
 using BSourceCore.API.Contracts.Responses;
+using BSourceCore.Shared.Kernel.Results;
 using FluentValidation;
 using Microsoft.AspNetCore.Diagnostics;
 
@@ -20,26 +21,32 @@ public class GlobalExceptionHandler : IExceptionHandler
     {
         _logger.LogError(exception, "An error occurred: {Message}", exception.Message);
 
-        ApiErrorResponse errorResponse = exception switch
+        var (statusCode, errors) = exception switch
         {
-            ValidationException validationException =>
-                ApiErrorResponse.Validation(
-                    validationException.Errors.Select(e => e.ErrorMessage)),
+            ValidationException validationException => (
+                StatusCodes.Status400BadRequest,
+                validationException.Errors.Select(e =>
+                    new Error("Validation", e.ErrorMessage, ErrorType.Validation))),
 
-            InvalidOperationException =>
-                ApiErrorResponse.BadRequest(exception.Message),
+            InvalidOperationException => (
+                StatusCodes.Status400BadRequest,
+                new[] { new Error("BadRequest", exception.Message, ErrorType.BusinessRule) }.AsEnumerable()),
 
-            KeyNotFoundException =>
-                ApiErrorResponse.NotFound(exception.Message),
+            KeyNotFoundException => (
+                StatusCodes.Status404NotFound,
+                new[] { new Error("NotFound", exception.Message, ErrorType.NotFound) }.AsEnumerable()),
 
-            UnauthorizedAccessException =>
-                ApiErrorResponse.Unauthorized(exception.Message),
+            UnauthorizedAccessException => (
+                StatusCodes.Status401Unauthorized,
+                new[] { new Error("Unauthorized", exception.Message, ErrorType.Unauthorized) }.AsEnumerable()),
 
-            _ => ApiErrorResponse.InternalError()
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                new[] { new Error("InternalError", "An unexpected error occurred", ErrorType.BusinessRule) }.AsEnumerable())
         };
 
-        httpContext.Response.StatusCode = errorResponse.Status;
-        await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
+        httpContext.Response.StatusCode = statusCode;
+        await httpContext.Response.WriteAsJsonAsync(ErrorResponse.From(errors), cancellationToken);
 
         return true;
     }

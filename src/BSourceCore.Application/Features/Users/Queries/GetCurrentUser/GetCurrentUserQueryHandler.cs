@@ -1,5 +1,6 @@
 using BSourceCore.Application.Abstractions.Repositories;
 using BSourceCore.Application.Features.Notifications.DTOs;
+using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Shared.Abstractions;
 using BSourceCore.Shared.Kernel.Results;
 using MediatR;
@@ -65,6 +66,7 @@ public class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQuery, R
             n.Data,
             n.Recipients.Any(r => r.UserId == userId && r.WasRead),
             n.CreatedAt,
+            n.CreatedBy != null ? new UserAuditDto(n.CreatedBy.UserId, n.CreatedBy.Name) : null,
             n.Recipients.Where(r => r.UserId == userId).Select(r => r.NotificationRecipientId).FirstOrDefault()));
 
         return Result<CurrentUserDto>.Success(new CurrentUserDto(
