@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IWebSocketNotificationService, WebSocketNotificationService>();
+        services.AddScoped<IDatabaseMigrationService, DatabaseMigrationService>();
 
         // Authorization
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
