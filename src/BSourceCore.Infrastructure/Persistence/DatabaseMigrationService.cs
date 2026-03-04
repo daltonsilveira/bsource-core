@@ -25,7 +25,7 @@ public class DatabaseMigrationService : IDatabaseMigrationService
     public async Task ApplyMigrationsAsync(CancellationToken cancellationToken = default)
     {
         var applyMigrationsSection = _configuration.GetSection("Database:ApplyMigrations");
-        var applyMigrations = _configuration.GetValue("Database:ApplyMigrations", false);
+        var applyMigrations = bool.TryParse(applyMigrationsSection.Value, out var parsedValue) && parsedValue;
 
         if (!applyMigrationsSection.Exists())
         {
