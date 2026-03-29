@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Users;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.API.Extensions;
@@ -37,7 +38,7 @@ public class UsersController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [Authorize(Policy = "users.create")]
+    [HasPermission("users.create")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
         _logger.LogInformation("Creating user with email: {Email}", request.Email);
@@ -63,7 +64,7 @@ public class UsersController : ControllerBase
     [HttpGet("{userId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "users.read")]
+    [HasPermission("users.read")]
     public async Task<IActionResult> GetById(Guid userId)
     {
         _logger.LogInformation("Getting user by Id: {UserId}", userId);
@@ -85,7 +86,7 @@ public class UsersController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
-    [Authorize(Policy = "users.read")]
+    [HasPermission("users.read")]
     public async Task<IActionResult> List()
     {
         _logger.LogInformation("Listing all users");
@@ -107,7 +108,7 @@ public class UsersController : ControllerBase
     [HttpPut("{userId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<UserDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "users.update")]
+    [HasPermission("users.update")]
     public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
     {
         _logger.LogInformation("Updating user: {UserId}", userId);
@@ -129,7 +130,7 @@ public class UsersController : ControllerBase
     [HttpDelete("{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "users.delete")]
+    [HasPermission("users.delete")]
     public async Task<IActionResult> Delete(Guid userId)
     {
         _logger.LogInformation("Deleting user: {UserId}", userId);

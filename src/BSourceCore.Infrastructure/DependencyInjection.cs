@@ -33,6 +33,9 @@ public static class DependencyInjection
         // HttpContextAccessor for UserContext
         services.AddHttpContextAccessor();
 
+        // Cache para permissões
+        services.AddMemoryCache();
+
         // Options
         services.Configure<BSourceNotifierOptions>(
             configuration.GetSection(BSourceNotifierOptions.SectionName));
@@ -73,3 +76,4 @@ public static class DependencyInjection
         return services;
     }
 }
+
