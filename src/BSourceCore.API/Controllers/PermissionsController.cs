@@ -1,11 +1,9 @@
 using Asp.Versioning;
-using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Permissions;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Permissions.Commands.CreatePermission;
 using BSourceCore.Application.Features.Permissions.Commands.UpdatePermission;
-using BSourceCore.Application.Features.Permissions.DTOs;
 using BSourceCore.Application.Features.Permissions.Queries.GetPermissionById;
 using BSourceCore.Application.Features.Permissions.Queries.ListPermissions;
 using MediatR;
@@ -36,7 +34,7 @@ public class PermissionsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [HasPermission("permissions.create")]
+    [Authorize(Policy = "permissions.create")]
     public async Task<IActionResult> Create([FromBody] CreatePermissionRequest request)
     {
         _logger.LogInformation("Creating permission with code: {Code}", request.Code);
@@ -53,7 +51,7 @@ public class PermissionsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<PermissionResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<PermissionResponse>.From(new PermissionResponse(result.Value!)));
     }
 
     /// <summary>
@@ -62,7 +60,7 @@ public class PermissionsController : ControllerBase
     [HttpGet("{permissionId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("permissions.read")]
+    [Authorize(Policy = "permissions.read")]
     public async Task<IActionResult> GetById(Guid permissionId)
     {
         _logger.LogInformation("Getting permission by Id: {PermissionId}", permissionId);
@@ -75,7 +73,7 @@ public class PermissionsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<PermissionResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<PermissionResponse>.From(new PermissionResponse(result.Value!)));
     }
 
     /// <summary>
@@ -83,7 +81,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
-    [HasPermission("permissions.read")]
+    [Authorize(Policy = "permissions.read")]
     public async Task<IActionResult> List()
     {
         _logger.LogInformation("Listing all permissions");
@@ -96,7 +94,7 @@ public class PermissionsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<PermissionResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x))));
+        return Ok(CollectionResponse<PermissionResponse>.From(result.Value!.Results.Select(x => new PermissionResponse(x))));
     }
 
     /// <summary>
@@ -105,7 +103,7 @@ public class PermissionsController : ControllerBase
     [HttpPut("{permissionId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("permissions.update")]
+    [Authorize(Policy = "permissions.update")]
     public async Task<IActionResult> Update(Guid permissionId, [FromBody] UpdatePermissionRequest request)
     {
         _logger.LogInformation("Updating permission: {PermissionId}", permissionId);
@@ -118,17 +116,6 @@ public class PermissionsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<PermissionResponse>.From(ToDefaultResponse(result.Value!)));
-    }
-
-    private static PermissionResponse ToDefaultResponse(PermissionDto dto)
-    {
-        return new PermissionResponse(
-            dto.PermissionId,
-            dto.Code,
-            dto.Name,
-            dto.Description,
-            dto.Status,
-            dto.CreatedAt);
+        return Ok(CollectionResponse<PermissionResponse>.From(new PermissionResponse(result.Value!)));
     }
 }

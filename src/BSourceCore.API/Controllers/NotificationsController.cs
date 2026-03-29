@@ -45,15 +45,7 @@ public class NotificationsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        var response = result.Value!.Results.Select(n => new NotificationResponse(
-            n.NotificationId,
-            n.Title,
-            n.Message,
-            n.Data,
-            n.WasRead,
-            n.CreatedAt));
-
-        return Ok(CollectionResponse<NotificationResponse>.From(response));
+        return Ok(CollectionResponse<NotificationResponse>.From(result.Value!.Results.Select(n => new NotificationResponse(n))));
     }
 
     /// <summary>
@@ -75,15 +67,7 @@ public class NotificationsController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        var response = new NotificationResponse(
-            result.Value!.NotificationId,
-            result.Value!.Title,
-            result.Value!.Message,
-            result.Value!.Data,
-            result.Value!.WasRead,
-            result.Value!.CreatedAt);
-
-        return Ok(CollectionResponse<NotificationResponse>.From(response));
+        return Ok(CollectionResponse<NotificationResponse>.From(new NotificationResponse(result.Value!)));
     }
 
     /// <summary>

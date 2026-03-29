@@ -72,6 +72,8 @@ API → Application → Infrastructure (via abstrações)
 
 ## 6. Tipos de Retorno por Operação
 
+### 6.1 Retornos do Handler (Application)
+
 | Operação | Handler retorna |
 |----------|-----------------|
 | Create   | `Result<TDto>`  |
@@ -80,14 +82,24 @@ API → Application → Infrastructure (via abstrações)
 | Get      | `Result<TDto>`  |
 | List     | `Result<CollectionResult<TDto>>` |
 
-6.1 Para Create/Update, o handler **DEVE** re-consultar via `GetEntityByIdQuery` após persistir, garantindo retorno completo e consistente.
-6.2.3 Todas as respostas de sucesso (item único ou coleção) **DEVEM** ser encapsuladas em `CollectionResponse<TResponse>`
-6.2.4 Cada controller **DEVE** ter um método privado `ToDefaultResponse(TDto)` para mapear DTO → Response
-6.2.5 Para Create/Update: `CollectionResponse<TResponse>.From(ToDefaultResponse(result.Value!))`
-6.2.6 Para List: `CollectionResponse<TResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x)))`
-6.2.7 Para Delete: retornar `NoContent()` diretamente
-6.2.8 A API deve usar os contratos `CollectionResponse<T>` e `ErrorResponse` na camada Contracts/Responses
-6.2 Para Delete, o handler realiza soft delete (`BaseStatus.Deleted`) e retorna apenas `Result.Success().`
+6.1.1 Para Create/Update, o handler **DEVE** re-consultar via `GetEntityByIdQuery` após persistir, garantindo retorno completo e consistente.  
+6.1.2 Para Delete, o handler realiza soft delete (`BaseStatus.Deleted`) e retorna apenas `Result.Success()`.
+
+### 6.2 Retornos do Controller (API)
+
+6.2.1 Todas as respostas de sucesso (item único ou coleção) **DEVEM** ser encapsuladas em `CollectionResponse<TResponse>`  
+6.2.2 A API **DEVE** usar os contratos `CollectionResponse<T>` e `ErrorResponse` na camada Contracts/Responses  
+6.2.3 O mapeamento DTO → Response **DEVE** ser feito pelo construtor da classe Response  
+
+### 6.3 Padrões de Retorno no Controller
+
+| Operação | Controller retorna |
+|----------|-------------------|
+| Create   | `CollectionResponse<TResponse>.From(new TResponse(result.Value!))` |
+| Update   | `CollectionResponse<TResponse>.From(new TResponse(result.Value!))` |
+| Get      | `CollectionResponse<TResponse>.From(new TResponse(result.Value!))` |
+| List     | `CollectionResponse<TResponse>.From(result.Value!.Results.Select(x => new TResponse(x)))` |
+| Delete   | `NoContent()` |
 
 ---
 
@@ -213,7 +225,7 @@ Result<TDto> ou Result<CollectionResult<TDto>>
    ↓
 Controller verifica IsSuccess
    ↓
-ToDefaultResponse(dto)
+new TResponse(dto)
    ↓
 CollectionResponse<TResponse>
    ↓

@@ -1,12 +1,10 @@
 using Asp.Versioning;
-using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Users;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.API.Extensions;
 using BSourceCore.Application.Features.Users.Commands.CreateUser;
 using BSourceCore.Application.Features.Users.Commands.DeleteUser;
 using BSourceCore.Application.Features.Users.Commands.UpdateUser;
-using BSourceCore.Application.Features.Users.DTOs;
 using BSourceCore.Application.Features.Users.Queries.GetCurrentUser;
 using BSourceCore.Application.Features.Users.Queries.GetUserById;
 using BSourceCore.Application.Features.Users.Queries.ListUsers;
@@ -38,7 +36,7 @@ public class UsersController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [HasPermission("users.create")]
+    [Authorize(Policy = "users.create")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequest request)
     {
         _logger.LogInformation("Creating user with email: {Email}", request.Email);
@@ -55,7 +53,7 @@ public class UsersController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<UserResponse>.From(new UserResponse(result.Value!)));
     }
 
     /// <summary>
@@ -64,7 +62,7 @@ public class UsersController : ControllerBase
     [HttpGet("{userId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("users.read")]
+    [Authorize(Policy = "users.read")]
     public async Task<IActionResult> GetById(Guid userId)
     {
         _logger.LogInformation("Getting user by Id: {UserId}", userId);
@@ -78,7 +76,7 @@ public class UsersController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<UserResponse>.From(new UserResponse(result.Value!)));
     }
 
     /// <summary>
@@ -86,7 +84,7 @@ public class UsersController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
-    [HasPermission("users.read")]
+    [Authorize(Policy = "users.read")]
     public async Task<IActionResult> List()
     {
         _logger.LogInformation("Listing all users");
@@ -99,16 +97,16 @@ public class UsersController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<UserResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x))));
+        return Ok(CollectionResponse<UserResponse>.From(result.Value!.Results.Select(x => new UserResponse(x))));
     }
 
     /// <summary>
     /// Updates a user
     /// </summary>
     [HttpPut("{userId:guid}")]
-    [ProducesResponseType(typeof(CollectionResponse<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(CollectionResponse<UserResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("users.update")]
+    [Authorize(Policy = "users.update")]
     public async Task<IActionResult> Update(Guid userId, [FromBody] UpdateUserRequest request)
     {
         _logger.LogInformation("Updating user: {UserId}", userId);
@@ -121,7 +119,7 @@ public class UsersController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        return Ok(CollectionResponse<UserResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<UserResponse>.From(new UserResponse(result.Value!)));
     }
 
     /// <summary>
@@ -130,7 +128,7 @@ public class UsersController : ControllerBase
     [HttpDelete("{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("users.delete")]
+    [Authorize(Policy = "users.delete")]
     public async Task<IActionResult> Delete(Guid userId)
     {
         _logger.LogInformation("Deleting user: {UserId}", userId);
@@ -164,38 +162,6 @@ public class UsersController : ControllerBase
             return result.ToProblemDetails(this);
         }
 
-        var response = new CurrentUserResponse(
-            result.Value!.UserId,
-            result.Value!.Email,
-            result.Value!.Name,
-            result.Value!.TenantId,
-            result.Value!.PermissionCodes,
-            result.Value!.Notifications.Select(n => new NotificationResponse(
-                n.NotificationId,
-                n.Title,
-                n.Message,
-                n.Data,
-                n.WasRead,
-                n.CreatedAt)));        
-
-        return Ok(CollectionResponse<CurrentUserResponse>.From(response));
-    }
-
-    private UserResponse ToDefaultResponse(UserDto dto)
-    {
-        return new UserResponse(
-            dto.UserId, 
-            dto.Name, 
-            dto.Email, 
-            dto.Status.ToString(), 
-            dto.CreatedAt,
-            dto.CreatedBy != null ? new UserAuditResponse(
-                dto.CreatedBy.UserId,
-                dto.CreatedBy.Name) : null,
-            dto.UpdatedAt,
-            dto.UpdatedBy != null ? new UserAuditResponse(
-                dto.UpdatedBy.UserId,
-                dto.UpdatedBy.Name) : null
-            );
+        return Ok(CollectionResponse<CurrentUserResponse>.From(new CurrentUserResponse(result.Value!)));
     }
 }

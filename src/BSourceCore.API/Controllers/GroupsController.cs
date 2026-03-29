@@ -1,5 +1,4 @@
 using Asp.Versioning;
-using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Groups;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.API.Extensions;
@@ -10,7 +9,6 @@ using BSourceCore.Application.Features.Groups.Commands.DeleteGroup;
 using BSourceCore.Application.Features.Groups.Commands.RemovePermissionFromGroup;
 using BSourceCore.Application.Features.Groups.Commands.RemoveUserFromGroup;
 using BSourceCore.Application.Features.Groups.Commands.UpdateGroup;
-using BSourceCore.Application.Features.Groups.DTOs;
 using BSourceCore.Application.Features.Groups.Queries.GetGroupById;
 using BSourceCore.Application.Features.Groups.Queries.ListGroups;
 using MediatR;
@@ -41,7 +39,7 @@ public class GroupsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [HasPermission("groups.create")]
+    [Authorize(Policy = "groups.create")]
     public async Task<IActionResult> Create([FromBody] CreateGroupRequest request)
     {
         _logger.LogInformation("Creating group with name: {Name}", request.Name);
@@ -53,7 +51,7 @@ public class GroupsController : ControllerBase
 
         if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<GroupResponse>.From(new GroupResponse(result.Value!)));
     }
 
     /// <summary>
@@ -62,7 +60,7 @@ public class GroupsController : ControllerBase
     [HttpGet("{groupId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("groups.read")]
+    [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> GetById(Guid groupId)
     {
         _logger.LogInformation("Getting group by Id: {GroupId}", groupId);
@@ -71,7 +69,7 @@ public class GroupsController : ControllerBase
 
         if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<GroupResponse>.From(new GroupResponse(result.Value!)));
     }
 
     /// <summary>
@@ -79,7 +77,7 @@ public class GroupsController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
-    [HasPermission("groups.read")]
+    [Authorize(Policy = "groups.read")]
     public async Task<IActionResult> List([FromQuery] Guid tenantId)
     {
         _logger.LogInformation("Listing all groups for tenant: {TenantId}", tenantId);
@@ -88,7 +86,7 @@ public class GroupsController : ControllerBase
 
         if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return Ok(CollectionResponse<GroupResponse>.From(result.Value!.Results.Select(x => ToDefaultResponse(x))));
+        return Ok(CollectionResponse<GroupResponse>.From(result.Value!.Results.Select(x => new GroupResponse(x))));
     }
 
     /// <summary>
@@ -97,7 +95,7 @@ public class GroupsController : ControllerBase
     [HttpPut("{groupId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<GroupResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("groups.update")]
+    [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> Update(Guid groupId, [FromBody] UpdateGroupRequest request)
     {
         _logger.LogInformation("Updating group: {GroupId}", groupId);
@@ -109,7 +107,7 @@ public class GroupsController : ControllerBase
 
         if (!result.IsSuccess) return result.ToProblemDetails(this);
 
-        return Ok(CollectionResponse<GroupResponse>.From(ToDefaultResponse(result.Value!)));
+        return Ok(CollectionResponse<GroupResponse>.From(new GroupResponse(result.Value!)));
     }
 
     /// <summary>
@@ -118,7 +116,7 @@ public class GroupsController : ControllerBase
     [HttpDelete("{groupId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("groups.delete")]
+    [Authorize(Policy = "groups.delete")]
     public async Task<IActionResult> Delete(Guid groupId)
     {
         _logger.LogInformation("Deleting group: {GroupId}", groupId);
@@ -136,7 +134,7 @@ public class GroupsController : ControllerBase
     [HttpPost("{groupId:guid}/users")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [HasPermission("groups.update")]
+    [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddUser(Guid groupId, [FromBody] AddUserToGroupRequest request)
     {
         _logger.LogInformation("Adding user {UserId} to group {GroupId}", request.UserId, groupId);
@@ -154,7 +152,7 @@ public class GroupsController : ControllerBase
     [HttpDelete("{groupId:guid}/users/{userId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("groups.update")]
+    [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemoveUser(Guid groupId, Guid userId)
     {
         _logger.LogInformation("Removing user {UserId} from group {GroupId}", userId, groupId);
@@ -172,7 +170,7 @@ public class GroupsController : ControllerBase
     [HttpPost("{groupId:guid}/permissions")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [HasPermission("groups.update")]
+    [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> AddPermission(Guid groupId, [FromBody] AddPermissionToGroupRequest request)
     {
         _logger.LogInformation("Adding permission {PermissionId} to group {GroupId}", request.PermissionId, groupId);
@@ -190,7 +188,7 @@ public class GroupsController : ControllerBase
     [HttpDelete("{groupId:guid}/permissions/{permissionId:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [HasPermission("groups.update")]
+    [Authorize(Policy = "groups.update")]
     public async Task<IActionResult> RemovePermission(Guid groupId, Guid permissionId)
     {
         _logger.LogInformation("Removing permission {PermissionId} from group {GroupId}", permissionId, groupId);
@@ -200,23 +198,5 @@ public class GroupsController : ControllerBase
         if (!result.IsSuccess)  return result.ToProblemDetails(this);
 
         return NoContent();
-    }
-
-    private static GroupResponse ToDefaultResponse(GroupDto dto)
-    {
-        return new GroupResponse(
-            dto.GroupId,
-            dto.TenantId,
-            dto.Name,
-            dto.Description,
-            dto.Status.ToString(),
-            dto.CreatedAt,
-            dto.CreatedBy != null ? new UserAuditResponse(
-                dto.CreatedBy.UserId,
-                dto.CreatedBy.Name) : null,
-            dto.UpdatedAt,
-            dto.UpdatedBy != null ? new UserAuditResponse(
-                dto.UpdatedBy.UserId,
-                dto.UpdatedBy.Name) : null);
     }
 }
