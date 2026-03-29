@@ -13,6 +13,8 @@ public class Group : TenantAuditEntity
     [MaxLength(500)]
     public string Description { get; private set; } = string.Empty;
     [Required]
+    public bool IsSuperAdmin { get; private set; } = false;
+    [Required]
     public BaseStatus Status { get; private set; } = BaseStatus.Active;
 
     // Navegação
