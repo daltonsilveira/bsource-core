@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Tenants;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.Application.Features.Tenants.Commands.CreateTenant;
@@ -35,7 +36,7 @@ public class TenantsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [Authorize(Policy = "tenants.create")]
+    [HasPermission("tenants.create")]
     public async Task<IActionResult> Create([FromBody] CreateTenantRequest request)
     {
         _logger.LogInformation("Creating tenant with name: {Name}", request.Name);
@@ -56,7 +57,7 @@ public class TenantsController : ControllerBase
     [HttpGet("{tenantId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "tenants.read")]
+    [HasPermission("tenants.read")]
     public async Task<IActionResult> GetById(Guid tenantId)
     {
         _logger.LogInformation("Getting tenant by Id: {TenantId}", tenantId);
@@ -73,7 +74,7 @@ public class TenantsController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<TenantResponse>), StatusCodes.Status200OK)]
-    [Authorize(Policy = "tenants.read")]
+    [HasPermission("tenants.read")]
     public async Task<IActionResult> List()
     {
         _logger.LogInformation("Listing all tenants");

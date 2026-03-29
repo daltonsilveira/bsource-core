@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using BSourceCore.API.Attributes;
 using BSourceCore.API.Contracts.Requests.Permissions;
 using BSourceCore.API.Contracts.Responses;
 using BSourceCore.API.Extensions;
@@ -35,7 +36,7 @@ public class PermissionsController : ControllerBase
     [HttpPost]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [Authorize(Policy = "permissions.create")]
+    [HasPermission("permissions.create")]
     public async Task<IActionResult> Create([FromBody] CreatePermissionRequest request)
     {
         _logger.LogInformation("Creating permission with code: {Code}", request.Code);
@@ -61,7 +62,7 @@ public class PermissionsController : ControllerBase
     [HttpGet("{permissionId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "permissions.read")]
+    [HasPermission("permissions.read")]
     public async Task<IActionResult> GetById(Guid permissionId)
     {
         _logger.LogInformation("Getting permission by Id: {PermissionId}", permissionId);
@@ -82,7 +83,7 @@ public class PermissionsController : ControllerBase
     /// </summary>
     [HttpGet]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
-    [Authorize(Policy = "permissions.read")]
+    [HasPermission("permissions.read")]
     public async Task<IActionResult> List()
     {
         _logger.LogInformation("Listing all permissions");
@@ -104,7 +105,7 @@ public class PermissionsController : ControllerBase
     [HttpPut("{permissionId:guid}")]
     [ProducesResponseType(typeof(CollectionResponse<PermissionResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-    [Authorize(Policy = "permissions.update")]
+    [HasPermission("permissions.update")]
     public async Task<IActionResult> Update(Guid permissionId, [FromBody] UpdatePermissionRequest request)
     {
         _logger.LogInformation("Updating permission: {PermissionId}", permissionId);
