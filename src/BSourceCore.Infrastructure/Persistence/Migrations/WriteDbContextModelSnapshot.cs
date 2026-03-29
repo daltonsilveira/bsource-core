@@ -39,6 +39,9 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
+                    b.Property<bool>("IsSuperAdmin")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -72,6 +75,7 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
                             GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
                             Description = "Full system administrators with all permissions",
+                            IsSuperAdmin = true,
                             Name = "Administrators",
                             Status = 1,
                             TenantId = new Guid("00000000-0000-0000-0000-000000000001")
@@ -118,136 +122,6 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
                     b.HasIndex("UpdatedById");
 
                     b.ToTable("GroupPermissions");
-
-                    b.HasData(
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0001-000000000001"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0001-000000000002"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0001-000000000003"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000003"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0001-000000000004"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000004"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0002-000000000001"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0002-000000000002"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0002-000000000003"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-000000000003"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0002-000000000004"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-000000000004"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0003-000000000001"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("30000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0003-000000000002"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("30000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0003-000000000003"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("30000000-0000-0000-0000-000000000003"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0003-000000000004"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("30000000-0000-0000-0000-000000000004"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0004-000000000001"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("40000000-0000-0000-0000-000000000001"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0004-000000000002"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("40000000-0000-0000-0000-000000000002"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0004-000000000003"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("40000000-0000-0000-0000-000000000003"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        },
-                        new
-                        {
-                            GroupPermissionId = new Guid("00000000-0000-0000-0004-000000000004"),
-                            CreatedAt = new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            GroupId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("40000000-0000-0000-0000-000000000004"),
-                            TenantId = new Guid("00000000-0000-0000-0000-000000000001")
-                        });
                 });
 
             modelBuilder.Entity("BSourceCore.Domain.Entities.Notification", b =>

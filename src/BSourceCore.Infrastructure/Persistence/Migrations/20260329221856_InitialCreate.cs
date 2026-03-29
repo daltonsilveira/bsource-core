@@ -38,6 +38,7 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
                     GroupId = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    IsSuperAdmin = table.Column<bool>(type: "boolean", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     CreatedById = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -238,8 +239,8 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
 
             migrationBuilder.InsertData(
                 table: "Groups",
-                columns: new[] { "GroupId", "CreatedAt", "CreatedById", "Description", "Name", "Status", "TenantId", "UpdatedAt", "UpdatedById" },
-                values: new object[] { new Guid("00000000-0000-0000-0000-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "Full system administrators with all permissions", "Administrators", 1, new Guid("00000000-0000-0000-0000-000000000001"), null, null });
+                columns: new[] { "GroupId", "CreatedAt", "CreatedById", "Description", "IsSuperAdmin", "Name", "Status", "TenantId", "UpdatedAt", "UpdatedById" },
+                values: new object[] { new Guid("00000000-0000-0000-0000-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "Full system administrators with all permissions", true, "Administrators", 1, new Guid("00000000-0000-0000-0000-000000000001"), null, null });
 
             migrationBuilder.InsertData(
                 table: "Permissions",
@@ -268,29 +269,6 @@ namespace BSourceCore.Infrastructure.Persistence.Migrations
                 table: "Users",
                 columns: new[] { "UserId", "CreatedAt", "CreatedById", "Email", "IsFirstAccess", "Login", "Name", "PasswordHash", "Status", "TenantId", "UpdatedAt", "UpdatedById" },
                 values: new object[] { new Guid("00000000-0000-0000-0000-000000000002"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, "admin@bsource.local", false, "admin", "System Administrator", "eFhNT1RYRVZ2NU9xUXpNbQ==.W/0eNJHDWZax1rVjZV/0v/EfAgg7Rywvx+VnEtH8bys=", 1, new Guid("00000000-0000-0000-0000-000000000001"), null, null });
-
-            migrationBuilder.InsertData(
-                table: "GroupPermissions",
-                columns: new[] { "GroupPermissionId", "CreatedAt", "CreatedById", "GroupId", "PermissionId", "TenantId", "UpdatedAt", "UpdatedById" },
-                values: new object[,]
-                {
-                    { new Guid("00000000-0000-0000-0001-000000000001"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("10000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0001-000000000002"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("10000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0001-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("10000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0001-000000000004"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("10000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0002-000000000001"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("20000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0002-000000000002"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("20000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0002-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("20000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0002-000000000004"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("20000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0003-000000000001"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("30000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0003-000000000002"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("30000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0003-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("30000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0003-000000000004"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("30000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0004-000000000001"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("40000000-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0004-000000000002"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("40000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0004-000000000003"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("40000000-0000-0000-0000-000000000003"), new Guid("00000000-0000-0000-0000-000000000001"), null, null },
-                    { new Guid("00000000-0000-0000-0004-000000000004"), new DateTimeOffset(new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)), null, new Guid("00000000-0000-0000-0000-000000000003"), new Guid("40000000-0000-0000-0000-000000000004"), new Guid("00000000-0000-0000-0000-000000000001"), null, null }
-                });
 
             migrationBuilder.InsertData(
                 table: "UserGroups",
