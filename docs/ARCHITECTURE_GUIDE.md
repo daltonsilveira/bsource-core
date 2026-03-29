@@ -116,6 +116,8 @@ API → Application → Infrastructure (via abstrações)
   - `BusinessRule` → 422
   - `Unexpected` → 500
 8.4 O pipeline MediatR executa validações FluentValidation e converte falhas em `Result.Fail` automaticamente.
+8.5 O campo `Error.Code` **DEVE** permanecer em inglês (identificador programático, ex: `"User.NotFound"`)
+8.6 O campo `Error.Message` **DEVE** estar sempre em português (pt-BR), pois é o texto apresentado ao consumidor da API
 
 ---
 
@@ -187,6 +189,12 @@ Ela atua apenas como adaptador entre HTTP e Application.
 * Mapear para Commands / Queries
 * Delegar para Application
 * Mapear resultado para Responses
+
+10.2.6 Todo objeto Response **DEVE** ser uma `class` (não `record`)
+
+10.2.7 Toda classe Response **DEVE** conter ao menos um construtor que receba o DTO correspondente da Application e realize o parse/mapeamento dos campos
+
+10.2.8 O mapeamento DTO → Response fica encapsulado **dentro da própria classe Response**, mantendo o controller limpo
 
 ---
 
